@@ -3,4 +3,15 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
          version="5.0">
+
+    <servlet>
+        <servlet-name>FrontServlet</servlet-name>
+        <servlet-class>etu2024.framework.servlet.FrontServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>FrontServlet</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>
