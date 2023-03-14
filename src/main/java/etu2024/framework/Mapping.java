@@ -12,7 +12,7 @@ import java.util.Objects;
 public class Mapping {
     String className;
     String method;
-    static String BASE_SOURCE = "src/main/java/";
+    public static String BASE_SOURCE = "/Users/mendrika/IdeaProjects/S4-Framework/src/main/java/";
 
     public Mapping(String className, String method) {
         setClassName(className);
@@ -27,7 +27,7 @@ public class Mapping {
             if (f.isDirectory()) {
                 classNames.addAll(getClassNameIn(f.getPath()));
             } else if (f.isFile() && f.getName().endsWith(".java")) {
-                classNames.add(f.getPath()
+                classNames.add(f.getAbsolutePath()
                         .split("\\.java")[0]
                         .split(BASE_SOURCE)[1]
                         .replace("/", "."));

@@ -15,7 +15,7 @@ public class FrontServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        setMappingUrls(Mapping.getAnnotatedUrlMethod("/Users/mendrika/IdeaProjects/S4-Framework/src/main/java/"));
+        setMappingUrls(Mapping.getAnnotatedUrlMethod(Mapping.BASE_SOURCE));
     }
 
     @Override
