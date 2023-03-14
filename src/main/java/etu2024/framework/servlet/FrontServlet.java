@@ -1,6 +1,7 @@
 package etu2024.framework.servlet;
 
 import etu2024.framework.Mapping;
+import etu2024.framework.Url;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
@@ -10,6 +11,12 @@ import java.util.HashMap;
 
 public class FrontServlet extends HttpServlet {
     HashMap<String, Mapping> mappingUrls;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        setMappingUrls(Mapping.getAnnotatedUrlMethod("/Users/mendrika/IdeaProjects/S4-Framework/src/main/java/"));
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -24,6 +31,17 @@ public class FrontServlet extends HttpServlet {
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String request_url = request.getRequestURL().toString().split(request.getContextPath())[1];
         response.getWriter().println(request_url);
+
+        for (String key : getMappingUrls().keySet()) {
+            response.getWriter().println("\n" + key + " :"
+                    + "\n\tClass: " + getMappingUrls().get(key).getClassName()
+                    + "\n\tMethod: " + getMappingUrls().get(key).getMethod());
+        }
+    }
+
+    @Url(url = "/test")
+    public void test(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.getWriter().println("test");
     }
 
     // Getters and setters
