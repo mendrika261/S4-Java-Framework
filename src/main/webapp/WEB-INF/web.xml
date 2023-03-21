@@ -7,6 +7,10 @@
     <servlet>
         <servlet-name>FrontServlet</servlet-name>
         <servlet-class>etu2024.framework.servlet.FrontServlet</servlet-class>
+        <init-param>
+            <param-name>PACKAGE_ROOT</param-name>
+            <param-value>/Users/mendrika/IdeaProjects/S4-Framework/src/main/java/</param-value>
+        </init-param>
     </servlet>
 
     <servlet-mapping>
