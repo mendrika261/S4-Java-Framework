@@ -15,7 +15,7 @@ public class FrontServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        setMappingUrls(Mapping.getAnnotatedUrlMethod(Mapping.BASE_SOURCE));
+        setMappingUrls(Mapping.getAnnotatedUrlMethod(getInitParameter("PACKAGE_ROOT")));
     }
 
     @Override
@@ -37,11 +37,6 @@ public class FrontServlet extends HttpServlet {
                     + "\n\tClass: " + getMappingUrls().get(key).getClassName()
                     + "\n\tMethod: " + getMappingUrls().get(key).getMethod());
         }
-    }
-
-    @Url(url = "/test")
-    public void test(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.getWriter().println("test");
     }
 
     // Getters and setters

@@ -12,24 +12,23 @@ import java.util.Objects;
 public class Mapping {
     String className;
     String method;
-    public static String BASE_SOURCE = "/Users/mendrika/IdeaProjects/S4-Framework/src/main/java/";
 
     public Mapping(String className, String method) {
         setClassName(className);
         setMethod(method);
     }
 
-    public static List<String> getClassNameIn(String path) {
+    public static List<String> getClassNameIn(String path, String packageRoot) {
         List<String> classNames = new ArrayList<>();
 
         File file = new File(path);
         for(File f: Objects.requireNonNull(file.listFiles())) {
             if (f.isDirectory()) {
-                classNames.addAll(getClassNameIn(f.getPath()));
+                classNames.addAll(getClassNameIn(f.getPath(), packageRoot));
             } else if (f.isFile() && f.getName().endsWith(".java")) {
                 classNames.add(f.getAbsolutePath()
                         .split("\\.java")[0]
-                        .split(BASE_SOURCE)[1]
+                        .split(packageRoot)[1]
                         .replace("/", "."));
             }
         }
@@ -41,7 +40,7 @@ public class Mapping {
         HashMap<String, Mapping> mappings = new HashMap<>();
 
         try {
-            for (String className : getClassNameIn(path)) {
+            for (String className : getClassNameIn(path, path)) {
                 Class<?> classA = Class.forName(className);
                 Method[] methods = classA.getDeclaredMethods();
                 for (Method method : methods) {
