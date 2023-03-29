@@ -1,10 +1,8 @@
 package etu2024.framework.servlet;
 
 import etu2024.framework.Mapping;
-import etu2024.framework.Url;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
 
 import java.io.IOException;
 import java.util.HashMap;
