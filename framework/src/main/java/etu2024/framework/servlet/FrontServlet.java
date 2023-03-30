@@ -1,10 +1,12 @@
 package etu2024.framework.servlet;
 
 import etu2024.framework.Mapping;
+import etu2024.framework.ModelView;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 public class FrontServlet extends HttpServlet {
@@ -26,14 +28,24 @@ public class FrontServlet extends HttpServlet {
         processRequest(request, response);
     }
 
-    private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         String request_url = request.getRequestURL().toString().split(request.getContextPath())[1];
-        response.getWriter().println(request_url);
 
-        for (String key : getMappingUrls().keySet()) {
-            response.getWriter().println("\n" + key + " :"
-                    + "\n\tClass: " + getMappingUrls().get(key).getClassName()
-                    + "\n\tMethod: " + getMappingUrls().get(key).getMethod());
+        Mapping mapping = getMappingUrls().get(request_url);
+        if(mapping == null) {
+            response.sendError(404, "FRAMEWORK ERROR - The method for the url " + request_url +
+                    " is not found, make sure it's annotated with @Url");
+            return;
+        }
+        try {
+            ModelView modelView = (ModelView) Class.forName(mapping.getClassName()).getMethod(mapping.getMethod()).invoke(null);
+            request.getRequestDispatcher(modelView.getView()).forward(request, response);
+        } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException |
+                 NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (NullPointerException e) {
+            response.sendError(500, "FRAMEWORK ERROR - The controller function " + mapping.getMethod() + " in " +
+                    mapping.getClassName() + " must return a ModelView");
         }
     }
 

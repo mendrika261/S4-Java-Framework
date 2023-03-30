@@ -13,6 +13,7 @@ function compile {
   while [ ${#source_files[@]} -ne 0 ]; do
     echo "Reminding:" ${#source_files[@]}
     for i in "${!source_files[@]}"; do
+      echo -cp "$classpath":"$out_directory" -d "$out_directory" "${source_files[i]}"
       javac -cp "$classpath":"$out_directory" -d "$out_directory" "${source_files[i]}" 2>compilation.temp
       compilation=$(<compilation.temp)
       if [ ${#compilation[0]} -eq 0  ]; then
@@ -42,4 +43,4 @@ rm -rf project-temp
 
 echo -e "${color_red}*** Restart server and open browser ***${color_reset}\n"
 brew services restart tomcat
-open -a Safari localhost:8080/framework
+open -a Safari http://localhost:8080/framework
