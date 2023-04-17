@@ -4,6 +4,6 @@
     <title>Title</title>
 </head>
 <body>
-    <h1>Test work jsp!</h1>
+    <h1>Test work jsp! <%= request.getAttribute("name") %> </h1>
 </body>
 </html>

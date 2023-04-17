@@ -30,14 +30,14 @@ tomcat_lib='/opt/homebrew/Cellar/tomcat/10.1.7/libexec/lib/*'
 tomcat_webapps='/opt/homebrew/Cellar/tomcat/10.1.7/libexec/webapps'
 
 echo -e "${color_red}*** Compiling framework into jar ***${color_reset}\n"
-compile ../framework/src/main/java framework-temp "$tomcat_lib"
-jar --create --file src/main/webapp/WEB-INF/lib/framework.jar -C framework-temp .
+compile framework/src/main/java framework-temp "$tomcat_lib"
+jar --create --file test-framework/src/main/webapp/WEB-INF/lib/framework.jar -C framework-temp .
 rm -rf framework-temp
 
 echo -e "${color_red}*** Compiling test-framework and deploy war ***${color_reset}\n"
 mkdir project-temp
-cp -r src/main/webapp/* project-temp
-compile src/main/java project-temp/WEB-INF/classes project-temp/WEB-INF/lib/*
+cp -r test-framework/src/main/webapp/* project-temp
+compile test-framework/src/main/java project-temp/WEB-INF/classes project-temp/WEB-INF/lib/*
 jar --create --file "$tomcat_webapps"/framework.war -C project-temp .
 rm -rf project-temp
 
