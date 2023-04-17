@@ -39,6 +39,10 @@ public class FrontServlet extends HttpServlet {
         }
         try {
             ModelView modelView = (ModelView) Class.forName(mapping.getClassName()).getMethod(mapping.getMethod()).invoke(null);
+
+            for(String key: modelView.getData().keySet())
+                request.setAttribute(key, modelView.getData().get(key));
+
             request.getRequestDispatcher(modelView.getView()).forward(request, response);
         } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException |
                  NoSuchMethodException e) {
