@@ -5,5 +5,10 @@
 </head>
 <body>
     <h1>Test work jsp! <%= request.getAttribute("name") %> </h1>
+    <form method="post">
+        <input type="text" name="name">
+        <input type="text" name="creation">
+        <input type="submit" value="submit">
+    </form>
 </body>
 </html>
