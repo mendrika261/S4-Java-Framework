@@ -2,14 +2,18 @@ package etu2024.framework;
 
 import java.util.HashMap;
 
+
+// This class is used to store the view and the data to be sent to the view
 public class ModelView {
     String view;
     HashMap<String, Object> data = new HashMap<>();
 
+    // Constructor
     public ModelView(String view) {
         setView(view);
     }
 
+    // Getters and setters
     public String getView() {
         return view;
     }
