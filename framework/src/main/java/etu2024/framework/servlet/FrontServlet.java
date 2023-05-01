@@ -7,10 +7,8 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.Date;
 import java.util.HashMap;
 
 public class FrontServlet extends HttpServlet {
@@ -57,15 +55,16 @@ public class FrontServlet extends HttpServlet {
 
             // Set the parameters from the request to the object
             for(Method method: objectClass.getDeclaredMethods()) {
+                String attributeName = request.getParameter(method.getName().substring(3).toLowerCase());
                 // Test if the method is a setter
-                if (method.getName().startsWith("set")) {
+                if (method.getName().startsWith("set") && attributeName != null) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
                     // Test if the setter has one parameter
                     if (parameterTypes.length == 1) {
                         // Get the type of the parameter
                         Class<?> parameterType = parameterTypes[0];
                         // Cast the parameter to the right type
-                        Object param = Tools.cast(parameterType, request.getParameter(method.getName().substring(3).toLowerCase()));
+                        Object param = Tools.cast(parameterType, attributeName);
                         // Call the setter
                         method.invoke(object, param);
                     }

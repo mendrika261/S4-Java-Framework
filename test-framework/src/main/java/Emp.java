@@ -1,9 +1,11 @@
 import etu2024.framework.ModelView;
 import etu2024.framework.Url;
 
+import java.sql.Date;
+
 public class Emp {
     String name;
-    Double creation;
+    Date creation;
 
     @Url(url = "/")
     public ModelView get_all_emp() {
@@ -20,11 +22,11 @@ public class Emp {
         return name;
     }
 
-    public Double getCreation() {
+    public Date getCreation() {
         return creation;
     }
 
-    public void setCreation(Double creation) {
+    public void setCreation(Date creation) {
         this.creation = creation;
     }
 }

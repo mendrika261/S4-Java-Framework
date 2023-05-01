@@ -26,8 +26,8 @@ function compile {
   rm -rf compilation.temp
 }
 
-tomcat_lib='/opt/homebrew/Cellar/tomcat/10.1.7/libexec/lib/*'
-tomcat_webapps='/opt/homebrew/Cellar/tomcat/10.1.7/libexec/webapps'
+tomcat_lib='/opt/homebrew/Cellar/tomcat/10.1.8/libexec/lib/*'
+tomcat_webapps='/opt/homebrew/Cellar/tomcat/10.1.8/libexec/webapps'
 
 echo -e "${color_red}*** Compiling framework into jar ***${color_reset}\n"
 compile framework/src/main/java framework-temp "$tomcat_lib"
