@@ -9,7 +9,8 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.lang.reflect.Parameter;
+import java.util.*;
 
 public class FrontServlet extends HttpServlet {
     HashMap<String, Mapping> mappingUrls;
@@ -36,6 +37,7 @@ public class FrontServlet extends HttpServlet {
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         // Get the url from the request
         String request_url = request.getRequestURL().toString().split(request.getContextPath())[1];
+        response.getWriter().println(getMappingUrls().size());
 
         // Get the mapping from the url
         Mapping mapping = getMappingUrls().get(request_url);
@@ -71,8 +73,16 @@ public class FrontServlet extends HttpServlet {
                 }
             }
 
-            // 2. Call the method from the mapping
-            ModelView modelView = (ModelView) objectClass.getMethod(mapping.getMethod()).invoke(object);
+            // 2. set the parameters corresponding to method parameters
+            Method method = Tools.getMethodByName(objectClass, mapping.getMethod());
+            List<Object> parameters = new ArrayList<>();
+            for(Parameter parameter : method.getParameters()) {
+                String attributeName = request.getParameter(parameter.getName());
+                parameters.add(Tools.cast(parameter.getType(), attributeName));
+            }
+
+            // 3. Call the method from the mapping
+            ModelView modelView = (ModelView) method.invoke(object, parameters.toArray());
 
             // Set the attributes from the modelView to the request
             for(String key: modelView.getData().keySet())
@@ -83,7 +93,8 @@ public class FrontServlet extends HttpServlet {
 
         } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException | NoSuchMethodException |
                  InstantiationException e) {
-            throw new RuntimeException(e);
+            response.sendError(404, "FRAMEWORK ERROR - The controller function " + mapping.getMethod() + " in " +
+                    mapping.getClassName() + " is not found");
         } catch (NullPointerException e) {
             // If the controller function doesn't return a ModelView, send a 500 error
             response.sendError(500, "FRAMEWORK ERROR - The controller function " + mapping.getMethod() + " in " +

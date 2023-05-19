@@ -8,11 +8,33 @@ import java.lang.reflect.Method;
 
 // This class contains useful methods
 public class Tools {
+    public static Method getMethodByName(Class<?> type, String name) {
+        Method[] methods = type.getDeclaredMethods();
+        // For each method, check if the name is the same as the one given in parameter
+        for(Method method : methods) {
+            if(method.getName().equals(name)) {
+                return method;
+            }
+        }
+        // If the method is not found, throw an exception
+        throw new MethodNotFoundException("FRAMEWORK ERROR - The method " + name +
+                " is not found in the class " + type.getName());
+    }
+
     public static Object cast(Class<?> type, String value) {
         if(type.isPrimitive()) {
-            // If the type is a primitive type, throw an exception
-            throw new IllegalArgumentException("FRAMEWORK ERROR - The type " + type.getName() +
-                    " is a primitive type, use the class instead");
+            try {
+                // Convert type to the corresponding wrapper class
+                Class<?> wrapperClass = Class.forName("java.lang." + type.getName().substring(0, 1).toUpperCase() +
+                        type.getName().substring(1));
+                // Get the parse method
+                Method method = wrapperClass.getMethod("parse" + type.getName().substring(0, 1).toUpperCase() +
+                        type.getName().substring(1), String.class);
+                return method.invoke(null, value);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | ClassNotFoundException e) {
+                throw new MethodNotFoundException("FRAMEWORK ERROR - The type " + type.getName() +
+                        " is not supported");
+            }
         } else {
             try {
                 // Try to get the constructor with a String parameter
@@ -27,18 +49,10 @@ public class Tools {
                     // If the constructor and the valueOf method are not found, throw an exception
                     throw new MethodNotFoundException("FRAMEWORK ERROR - The type " + type.getName() +
                             " doesn't have a constructor or a valueOf method with a String parameter");
-                } catch (InvocationTargetException ex) {
-                    // If the value can't be cast to the type, throw an exception
-                    throw new RuntimeException("FRAMEWORK ERROR - The value " + value +
-                            " can't be cast to the type " + type.getName());
-                } catch (IllegalAccessException ignored) {
+                } catch (InvocationTargetException | IllegalAccessException ignored) {
                     return null;
                 }
-            } catch (InvocationTargetException e) {
-                // If the value can't be cast to the type, throw an exception
-                throw new RuntimeException("FRAMEWORK ERROR - The value " + value +
-                        " can't be cast to the type " + type.getName());
-            } catch (InstantiationException | IllegalAccessException e) {
+            } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
                 return null;
             }
         }
