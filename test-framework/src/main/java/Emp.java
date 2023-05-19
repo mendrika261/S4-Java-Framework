@@ -14,6 +14,13 @@ public class Emp {
         return modelView;
     }
 
+    @Url(url = "/find")
+    public ModelView get(double id) {
+        ModelView modelView = new ModelView("test.jsp");
+        modelView.addItem("name", id);
+        return modelView;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
