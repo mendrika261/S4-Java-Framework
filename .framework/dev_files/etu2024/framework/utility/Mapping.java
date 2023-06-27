@@ -1,9 +1,9 @@
-package etu2024.framework;
+package etu2024.framework.utility;
+
+import etu2024.framework.annotation.Url;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.text.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

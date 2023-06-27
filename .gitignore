@@ -1,8 +1,2 @@
-.*
-test-framework/.idea/
-test-framework/out/
-framework/.idea/
-framework/out/
-framework/framework.iml
-framework/src/main/java/META-INF
-test-framework/data.sql
+.idea/
+tomcat.log

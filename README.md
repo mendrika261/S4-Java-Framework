@@ -42,8 +42,8 @@
 # Usage
 
 ## Controller
-- A controller should annotate the `@etu2024.framework.Url`
-- And must return a `etu2024.framework.ModelView;` that requires a view (can be .jsp, .html...)
+- A controller should annotate the `@etu2024.framework.annotation.Url`
+- And must return a `etu2024.framework.core.ModelView;` that requires a view (can be .jsp, .html...)
 - If a data is get from the view it will assign in the class attribute if exists
 - Alternative, the controller method can also take arguments with needed to pass data
 - Eg:

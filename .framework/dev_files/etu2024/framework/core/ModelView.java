@@ -1,4 +1,4 @@
-package etu2024.framework;
+package etu2024.framework.core;
 
 import java.util.HashMap;
 

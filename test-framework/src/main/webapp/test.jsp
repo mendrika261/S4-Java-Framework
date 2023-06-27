@@ -5,9 +5,10 @@
 </head>
 <body>
     <h1>Test work jsp! <%= request.getAttribute("name") %> </h1>
-    <form method="post">
-        <input type="text" name="name">
-        <input type="date" name="creation">
+    <form method="post" enctype="multipart/form-data">
+        <input type="text" name="name[]">
+        <input type="text" name="name[]">
+        <input type="file" name="file">
         <input type="submit" value="submit">
     </form>
 </body>
