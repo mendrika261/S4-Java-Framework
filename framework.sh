@@ -134,6 +134,7 @@ function compile {
     if [ ${#source_files[@]} -eq "$reminding_files" ]; then # if no file has been compiled
       echo -e "${COLOR_RED}ERROR: Compilation failed due to unresolved dependencies or mistakes in the code ${COLOR_RESET}"
       cat compilation.log
+      rm -rf compilation.log
       exit 1
     fi
     reminding_files=${#source_files[@]}
