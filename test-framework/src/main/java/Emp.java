@@ -1,32 +1,30 @@
-import etu2024.framework.ModelView;
-import etu2024.framework.Url;
+import etu2024.framework.core.File;
+import etu2024.framework.core.ModelView;
+import etu2024.framework.annotation.Url;
 
 import java.sql.Date;
+import java.util.Arrays;
 
 public class Emp {
-    String name;
+    String[] name;
     Date creation;
+    File file;
 
     @Url(url = "/")
     public ModelView get_all_emp() {
         ModelView modelView = new ModelView("test.jsp");
-        modelView.addItem("name", getCreation());
+        if(getFile() != null)
+            if(getFile().isReady())
+                modelView.addItem("name", getFile());
         return modelView;
     }
 
     @Url(url = "/find")
-    public ModelView get(double id) {
+    public ModelView get(Double id) {
         ModelView modelView = new ModelView("test.jsp");
-        modelView.addItem("name", id);
+        if(name != null)
+            modelView.addItem("name", Arrays.toString(name));
         return modelView;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public Date getCreation() {
@@ -35,5 +33,13 @@ public class Emp {
 
     public void setCreation(Date creation) {
         this.creation = creation;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
     }
 }
