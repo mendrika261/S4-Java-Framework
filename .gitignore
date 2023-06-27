@@ -1,2 +1,3 @@
 .idea/
-tomcat.log
+*.log
+*.iml
