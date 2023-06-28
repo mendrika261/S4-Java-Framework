@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<app>
+    <config id="auth">
+        <session name="profile" />
+        <profiles>
+            <profile name="AUTH_PROFILE_ADMIN" value="admin" />
+        </profiles>
+    </config>
+</app>
