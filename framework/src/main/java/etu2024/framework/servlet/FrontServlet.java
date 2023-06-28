@@ -1,5 +1,6 @@
 package etu2024.framework.servlet;
 
+import com.google.gson.Gson;
 import etu2024.framework.annotation.Auth;
 import etu2024.framework.annotation.Session;
 import etu2024.framework.annotation.Singleton;
@@ -107,7 +108,13 @@ public class FrontServlet extends HttpServlet {
             for (String key : modelView.getData().keySet())
                 request.setAttribute(key, modelView.getData().get(key));
 
-            // Forward the request to the view
+            // Return JSON if isJson is true in the modelView
+            if(modelView.isJson()) {
+                printJson(modelView.getData(), response);
+                return;
+            }
+
+            // Forward the request if view is set in the modelView
             if (modelView.getView() != null)
                 request.getRequestDispatcher(modelView.getView()).forward(request, response);
 
@@ -179,6 +186,13 @@ public class FrontServlet extends HttpServlet {
         }
         // If the class is not annotated with @Singleton create a new instance
         return objectClass.getDeclaredConstructor().newInstance();
+    }
+
+    public void printJson(Object object, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        Gson gson = new Gson();
+        gson.toJson(object, response.getWriter());
     }
 
     // Getters and setters
