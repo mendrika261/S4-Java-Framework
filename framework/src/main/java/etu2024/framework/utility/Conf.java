@@ -49,4 +49,22 @@ public class Conf {
             throw new RuntimeException("Profiles for auth not found in app.xml");
         }
     }
+
+    public static HashMap<String, String> getAuthRedirections() {
+        try {
+            Element redirectionsElement = (Element) getDocument().getElementsByTagName("redirections").item(0);
+            NodeList redirectionNodes = redirectionsElement.getElementsByTagName("redirect");
+
+            HashMap<String, String> redirectionsMap = new HashMap<>();
+            for (int i = 0; i < redirectionNodes.getLength(); i++) {
+                Element redirectionElement = (Element) redirectionNodes.item(i);
+                String redirectionName = redirectionElement.getAttribute("name");
+                String redirectionValue = redirectionElement.getAttribute("value");
+                redirectionsMap.put(redirectionName, redirectionValue);
+            }
+            return redirectionsMap;
+        } catch (Exception e) {
+            throw new RuntimeException("Redirections for auth not found in app.xml");
+        }
+    }
 }

@@ -12,6 +12,7 @@ public class ModelView {
     HashMap<String, Object> data = new HashMap<>();
     HashMap<String, Object> session = new HashMap<>();
     boolean isJson = false;
+    boolean isRedirect = false;
 
     // Constructor
     public ModelView() {}
@@ -24,7 +25,10 @@ public class ModelView {
     public boolean login(String profile) {
         User.profileExists(profile);
         addSessionItem(Conf.getAuthSessionName(), profile);
-        return isLogged(profile);
+        boolean login = isLogged(profile);
+        if (login)
+            redirect(Conf.getAuthRedirections().get("AUTH_REDIRECT_LOGIN"));
+        return login;
     }
 
     public boolean loginUser() {
@@ -45,12 +49,25 @@ public class ModelView {
 
     public boolean logout() {
         removeSessionItem(Conf.getAuthSessionName());
-        return !getSession().containsKey(Conf.getAuthSessionName()) || getSession().get(Conf.getAuthSessionName()) == null;
+        boolean logout = !getSession().containsKey(Conf.getAuthSessionName()) || getSession().get(Conf.getAuthSessionName()) == null;
+        if (logout)
+            redirect(Conf.getAuthRedirections().get("AUTH_REDIRECT_LOGOUT"));
+        return logout;
     }
 
     public boolean isLogged(String profile) {
         return getSession().containsKey(Conf.getAuthSessionName()) && getSession().get(Conf.getAuthSessionName()) != null &&
                 getSession().get(Conf.getAuthSessionName()).equals(profile);
+    }
+
+    public boolean isLogged() {
+        return getSession().containsKey(Conf.getAuthSessionName()) && getSession().get(Conf.getAuthSessionName()) != null;
+    }
+
+    public ModelView redirect(String url) {
+        setView(url);
+        setRedirect(true);
+        return this;
     }
 
     // Getters and setters
@@ -60,6 +77,7 @@ public class ModelView {
 
     public void setView(String view) {
         this.view = view;
+        setRedirect(false);
     }
 
     public HashMap<String, Object> getData() {
@@ -96,5 +114,13 @@ public class ModelView {
 
     public void setJson(boolean isJson) {
         this.isJson = isJson;
+    }
+
+    public boolean isRedirect() {
+        return isRedirect;
+    }
+
+    public void setRedirect(boolean isRedirect) {
+        this.isRedirect = isRedirect;
     }
 }

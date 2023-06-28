@@ -14,6 +14,7 @@ import etu2024.framework.utility.Tools;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.*;
+import org.eclipse.jdt.internal.compiler.codegen.ObjectCache;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -77,33 +78,29 @@ public class FrontServlet extends HttpServlet {
             HttpSession session = request.getSession();
             Object profile = session.getAttribute(Conf.getAuthSessionName());
             if(!User.isAuthorized(method, profile)) {
-                response.sendError(403, "FRAMEWORK ERROR - You are not authorized to access this page");
+                response.sendRedirect(getServletContext().getContextPath()+Conf.getAuthRedirections().get("AUTH_REDIRECT_LOGOUT"));
                 return;
             }
 
+            // @RestAPI function directly return JSON
             if(method.isAnnotationPresent(RestAPI.class)) {
                 printJson(method.invoke(object, parameters.toArray()), response);
                 return;
             }
 
-            ModelView modelView = (ModelView) method.invoke(object, parameters.toArray());
+            Object functionReturn = method.invoke(object, parameters.toArray());
+            if(functionReturn == null || functionReturn.getClass() != ModelView.class) {
+                response.sendError(500, "FRAMEWORK ERROR - The method \"" + method.getName() + "\" in the class \"" +
+                        objectClass.getName() + "\" make errors, make sure it return a ModelView object or use @RestAPI" +
+                        " to return all types");
+                return;
+            }
+            ModelView modelView = (ModelView) functionReturn;
 
+            // 4. Set the session attributes if the method or the class is annotated with @Session
             if(method.isAnnotationPresent(Session.class) || objectClass.isAnnotationPresent(Session.class) ||
                 method.isAnnotationPresent(Auth.class)) {
-                // Set session attributes from the modelView to the request
-                for (String key : modelView.getSession().keySet()) {
-                    // If the value is null, remove the attribute from the session
-                    if (modelView.getSession().get(key) == null)
-                        session.removeAttribute(key);
-                    else
-                        session.setAttribute(key, modelView.getSession().get(key));
-                }
-
-                // Set session from the request to the modelView
-                for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements(); ) {
-                    String key = e.nextElement();
-                    modelView.addSessionItem(key, session.getAttribute(key));
-                }
+                setSessions(modelView, session);
             } else {
                 if(!modelView.getSession().isEmpty())
                     throw new RuntimeException("FRAMEWORK ERROR - You can't set or get session attributes if the method" +
@@ -121,8 +118,12 @@ public class FrontServlet extends HttpServlet {
             }
 
             // Forward the request if view is set in the modelView
-            if (modelView.getView() != null)
-                request.getRequestDispatcher(modelView.getView()).forward(request, response);
+            if (modelView.getView() != null) {
+                if (modelView.isRedirect())
+                    response.sendRedirect(getServletContext().getContextPath()+modelView.getView());
+                else
+                    request.getRequestDispatcher(modelView.getView()).forward(request, response);
+            }
 
         } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException | NoSuchMethodException |
                  InstantiationException e) {
@@ -193,6 +194,26 @@ public class FrontServlet extends HttpServlet {
         // If the class is not annotated with @Singleton create a new instance
         return objectClass.getDeclaredConstructor().newInstance();
     }
+
+    // Set session attributes from the modelView to the session and vice versa
+    public void setSessions(ModelView modelView, HttpSession session) {
+        // Set session attributes from the modelView to the request
+        for (String key : modelView.getSession().keySet()) {
+            // If the value is null, remove the attribute from the session
+            if (modelView.getSession().get(key) == null)
+                session.removeAttribute(key);
+            else
+                session.setAttribute(key, modelView.getSession().get(key));
+        }
+
+        // Set session from the request to the modelView
+        for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements(); ) {
+            String key = e.nextElement();
+            modelView.addSessionItem(key, session.getAttribute(key));
+        }
+    }
+
+
 
     public void printJson(Object object, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
