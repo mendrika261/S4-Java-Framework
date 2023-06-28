@@ -1,5 +1,8 @@
 package etu2024.framework.servlet;
 
+import com.google.gson.Gson;
+import etu2024.framework.annotation.Auth;
+import etu2024.framework.annotation.Session;
 import etu2024.framework.annotation.Singleton;
 import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
@@ -79,26 +82,39 @@ public class FrontServlet extends HttpServlet {
 
             ModelView modelView = (ModelView) method.invoke(object, parameters.toArray());
 
-            // Set session attributes from the modelView to the request
-            for (String key: modelView.getSession().keySet()) {
-                // If the value is null, remove the attribute from the session
-                if(modelView.getSession().get(key) == null)
-                    session.removeAttribute(key);
-                else
-                    session.setAttribute(key, modelView.getSession().get(key));
-            }
+            if(method.isAnnotationPresent(Session.class) || objectClass.isAnnotationPresent(Session.class) ||
+                method.isAnnotationPresent(Auth.class)) {
+                // Set session attributes from the modelView to the request
+                for (String key : modelView.getSession().keySet()) {
+                    // If the value is null, remove the attribute from the session
+                    if (modelView.getSession().get(key) == null)
+                        session.removeAttribute(key);
+                    else
+                        session.setAttribute(key, modelView.getSession().get(key));
+                }
 
-            // Set session from the request to the modelView
-            for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements(); ) {
-                String key = e.nextElement();
-                modelView.addSessionItem(key, session.getAttribute(key));
+                // Set session from the request to the modelView
+                for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements(); ) {
+                    String key = e.nextElement();
+                    modelView.addSessionItem(key, session.getAttribute(key));
+                }
+            } else {
+                if(!modelView.getSession().isEmpty())
+                    throw new RuntimeException("FRAMEWORK ERROR - You can't set or get session attributes if the method" +
+                            " or the class is not annotated with @Session");
             }
 
             // Set the attributes from the modelView to the request
             for (String key : modelView.getData().keySet())
                 request.setAttribute(key, modelView.getData().get(key));
 
-            // Forward the request to the view
+            // Return JSON if isJson is true in the modelView
+            if(modelView.isJson()) {
+                printJson(modelView.getData(), response);
+                return;
+            }
+
+            // Forward the request if view is set in the modelView
             if (modelView.getView() != null)
                 request.getRequestDispatcher(modelView.getView()).forward(request, response);
 
@@ -170,6 +186,13 @@ public class FrontServlet extends HttpServlet {
         }
         // If the class is not annotated with @Singleton create a new instance
         return objectClass.getDeclaredConstructor().newInstance();
+    }
+
+    public void printJson(Object object, HttpServletResponse response) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        Gson gson = new Gson();
+        gson.toJson(object, response.getWriter());
     }
 
     // Getters and setters

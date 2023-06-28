@@ -40,8 +40,8 @@ public class Emp {
     @Url(url = "/find")
     public ModelView get(Double id) {
         ModelView modelView = new ModelView("test.jsp");
-        if(name != null)
-            modelView.addItem("name", Arrays.toString(name));
+        modelView.setJson(true);
+        modelView.addItem("name", "test");
         return modelView;
     }
 

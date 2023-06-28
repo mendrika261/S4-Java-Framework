@@ -41,6 +41,9 @@ if [[ "$1" == "-i" || "$1" == "--init" ]]; then
     # Move framework.jar to $PROJECT_JAVA_LIB
     cp .framework/framework.jar "$PROJECT_JAVA_LIB"
 
+    # Copy lib files from .framework
+    cp -r .framework/lib/* "$PROJECT_JAVA_LIB"
+
     # Project creation test
     error=0
 
@@ -139,7 +142,7 @@ function compile {
     fi
     reminding_files=${#source_files[@]}
   done
-  rm -rf compilation.temp
+  rm -rf compilation.log
 }
 
 
