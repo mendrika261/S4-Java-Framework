@@ -2,6 +2,7 @@ package etu2024.framework.servlet;
 
 import com.google.gson.Gson;
 import etu2024.framework.annotation.Auth;
+import etu2024.framework.annotation.RestAPI;
 import etu2024.framework.annotation.Session;
 import etu2024.framework.annotation.Singleton;
 import etu2024.framework.core.File;
@@ -77,6 +78,11 @@ public class FrontServlet extends HttpServlet {
             Object profile = session.getAttribute(Conf.getAuthSessionName());
             if(!User.isAuthorized(method, profile)) {
                 response.sendError(403, "FRAMEWORK ERROR - You are not authorized to access this page");
+                return;
+            }
+
+            if(method.isAnnotationPresent(RestAPI.class)) {
+                printJson(method.invoke(object, parameters.toArray()), response);
                 return;
             }
 
