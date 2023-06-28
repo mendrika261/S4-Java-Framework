@@ -4,25 +4,42 @@
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
          version="5.0">
 
+    <!-- This is the main servlet of the framework -->
     <servlet>
         <servlet-name>FrontServlet</servlet-name>
         <servlet-class>etu2024.framework.servlet.FrontServlet</servlet-class>
         <init-param>
+            <!-- The root package of the project must set here (with framework.sh generally)-->
             <param-name>PACKAGE_ROOT</param-name>
             <param-value>/Users/mendrika/IdeaProjects/S4-Java-Framework/test-framework/src/main/java/</param-value>
         </init-param>
     </servlet>
 
+    <!--
+        All the requests are redirected to the FrontServlet
+        NOTE: For some version of Tomcat, you must add static files into the default servlet
+    -->
     <servlet-mapping>
         <servlet-name>FrontServlet</servlet-name>
         <url-pattern/>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
 
+    <!--
+        Static files are served by the default servlet
+    -->
     <servlet-mapping>
         <servlet-name>default</servlet-name>
         <url-pattern>*.html</url-pattern>
         <url-pattern>*.css</url-pattern>
+        <url-pattern>*.js</url-pattern>
+        <url-pattern>*.png</url-pattern>
+        <url-pattern>*.jpg</url-pattern>
+        <url-pattern>*.jpeg</url-pattern>
+        <url-pattern>*.gif</url-pattern>
+        <url-pattern>*.svg</url-pattern>
+        <url-pattern>*.ico</url-pattern>
+        <url-pattern>*.ttf</url-pattern>
     </servlet-mapping>
 
 </web-app>
