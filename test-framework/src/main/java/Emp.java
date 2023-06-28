@@ -1,3 +1,4 @@
+import etu2024.framework.annotation.Auth;
 import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
 import etu2024.framework.annotation.Url;
@@ -11,11 +12,28 @@ public class Emp {
     File file;
 
     @Url(url = "/")
+    @Auth(profiles = {"admin", "user"})
     public ModelView get_all_emp() {
         ModelView modelView = new ModelView("test.jsp");
         if(getFile() != null)
             if(getFile().isReady())
                 modelView.addItem("name", getFile());
+        return modelView;
+    }
+
+    @Url(url = "/login")
+    public ModelView login() {
+        ModelView modelView = new ModelView("test.html");
+        if(modelView.loginAdmin())
+            modelView.setView("test.jsp");
+        return modelView;
+    }
+
+    @Url(url = "/logout")
+    public ModelView logout() {
+        ModelView modelView = new ModelView("test.html");
+        if(modelView.logout())
+            modelView.setView("test.jsp");
         return modelView;
     }
 

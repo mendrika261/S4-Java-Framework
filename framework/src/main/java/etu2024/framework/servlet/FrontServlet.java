@@ -3,6 +3,8 @@ package etu2024.framework.servlet;
 import etu2024.framework.annotation.Singleton;
 import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
+import etu2024.framework.utility.Conf;
+import etu2024.framework.utility.User;
 import etu2024.framework.utility.Mapping;
 import etu2024.framework.utility.Tools;
 import jakarta.servlet.*;
@@ -67,14 +69,38 @@ public class FrontServlet extends HttpServlet {
             List<Object> parameters = setMethodParameters(method, request);
 
             // 3. Call the method from the mapping
+            // Check if client authorized to call the method (if the method is annotated with @Auth)
+            HttpSession session = request.getSession();
+            Object profile = session.getAttribute(Conf.getAuthSessionName());
+            if(!User.isAuthorized(method, profile)) {
+                response.sendError(403, "FRAMEWORK ERROR - You are not authorized to access this page");
+                return;
+            }
+
             ModelView modelView = (ModelView) method.invoke(object, parameters.toArray());
+
+            // Set session attributes from the modelView to the request
+            for (String key: modelView.getSession().keySet()) {
+                // If the value is null, remove the attribute from the session
+                if(modelView.getSession().get(key) == null)
+                    session.removeAttribute(key);
+                else
+                    session.setAttribute(key, modelView.getSession().get(key));
+            }
+
+            // Set session from the request to the modelView
+            for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements(); ) {
+                String key = e.nextElement();
+                modelView.addSessionItem(key, session.getAttribute(key));
+            }
 
             // Set the attributes from the modelView to the request
             for (String key : modelView.getData().keySet())
                 request.setAttribute(key, modelView.getData().get(key));
 
             // Forward the request to the view
-            request.getRequestDispatcher(modelView.getView()).forward(request, response);
+            if (modelView.getView() != null)
+                request.getRequestDispatcher(modelView.getView()).forward(request, response);
 
         } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException | NoSuchMethodException |
                  InstantiationException e) {

@@ -1,7 +1,10 @@
 package etu2024.framework.servlet;
 
+import etu2024.framework.annotation.Singleton;
 import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
+import etu2024.framework.utility.Conf;
+import etu2024.framework.utility.User;
 import etu2024.framework.utility.Mapping;
 import etu2024.framework.utility.Tools;
 import jakarta.servlet.*;
@@ -17,8 +20,8 @@ import java.util.*;
 
 @MultipartConfig
 public class FrontServlet extends HttpServlet {
-    HashMap<String, Mapping> mappingUrls;
-    HashMap<Class<?>, Object> instances;
+    HashMap<String, Mapping> mappingUrls; // The mapping urls
+    HashMap<Class<?>, Object> instances; // The instances of the classes for singleton
 
     @Override
     public void init() throws ServletException {
@@ -55,17 +58,6 @@ public class FrontServlet extends HttpServlet {
         }
 
         try {
-            if (request.getMethod().equals("POST")) {
-                Enumeration<String> parameterNames = request.getParameterNames();
-                while (parameterNames.hasMoreElements()) {
-                    String paramName = parameterNames.nextElement();
-                    System.out.println("Parameter Name: " + paramName);
-                }
-                System.out.println("Request1: " + request.getParameter("file"));
-                Part part = request.getPart("file");
-                System.out.println("Request2: " + request.getPart("file").toString());
-            }
-
             // Get the class from the mapping
             Class<?> objectClass = Class.forName(mapping.getClassName());
 
@@ -77,36 +69,52 @@ public class FrontServlet extends HttpServlet {
             List<Object> parameters = setMethodParameters(method, request);
 
             // 3. Call the method from the mapping
+            // Check if client authorized to call the method (if the method is annotated with @Auth)
+            HttpSession session = request.getSession();
+            Object profile = session.getAttribute(Conf.getAuthSessionName());
+            if(!User.isAuthorized(method, profile)) {
+                response.sendError(403, "FRAMEWORK ERROR - You are not authorized to access this page");
+                return;
+            }
+
             ModelView modelView = (ModelView) method.invoke(object, parameters.toArray());
+
+            // Set session attributes from the modelView to the request
+            for (String key: modelView.getSession().keySet()) {
+                // If the value is null, remove the attribute from the session
+                if(modelView.getSession().get(key) == null)
+                    session.removeAttribute(key);
+                else
+                    session.setAttribute(key, modelView.getSession().get(key));
+            }
+
+            // Set session from the request to the modelView
+            for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements(); ) {
+                String key = e.nextElement();
+                modelView.addSessionItem(key, session.getAttribute(key));
+            }
 
             // Set the attributes from the modelView to the request
             for (String key : modelView.getData().keySet())
                 request.setAttribute(key, modelView.getData().get(key));
 
             // Forward the request to the view
-            request.getRequestDispatcher(modelView.getView()).forward(request, response);
+            if (modelView.getView() != null)
+                request.getRequestDispatcher(modelView.getView()).forward(request, response);
 
-        /*} catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException | NoSuchMethodException |
-                 InstantiationException e) {
-            response.sendError(404, "FRAMEWORK ERROR - The controller function " + mapping.getMethod() + " in " +
-                    mapping.getClassName() + " is not found");
-        } catch (NullPointerException e) {
-            // If the controller function doesn't return a ModelView, send a 500 error
-            response.sendError(500, "FRAMEWORK ERROR - The controller function " + mapping.getMethod() + " in " +
-                    mapping.getClassName() + " must return a ModelView");
-        }*/
         } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException | NoSuchMethodException |
                  InstantiationException e) {
             throw new RuntimeException(e);
         }
     }
 
-        // Set mapped function parameters from the request
+    // Set mapped function parameters from the request
     public List<Object> setMethodParameters(Method method, HttpServletRequest request) throws ServletException, IOException {
         List<Object> parameters = new ArrayList<>();
         for(Parameter parameter : method.getParameters()) {
             Object paramValue;
             if(parameter.getType() == File.class) {
+                // If the request is multipart, get the file from the request
                 if(request.getContentType() != null && request.getContentType().startsWith("multipart/"))
                     paramValue = request.getPart(parameter.getName());
                 else
@@ -116,7 +124,7 @@ public class FrontServlet extends HttpServlet {
             } else {
                 paramValue = request.getParameter(parameter.getName());
             }
-            if(paramValue == null)
+            if(paramValue == null) // If the parameter is not found in the request, add null
                 parameters.add(null);
             else
                 parameters.add(Tools.cast(parameter.getType(), paramValue));
@@ -124,42 +132,14 @@ public class FrontServlet extends HttpServlet {
         return parameters;
     }
 
-    // For singleton classes
-    public Object constructObject(Class<?> objectClass) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        return objectClass.getDeclaredConstructor().newInstance();
-    }
-
     // Set all attributes of the mapped class from the request
     public Object setAttributeToTheObject(Class<?> objectClass, HttpServletRequest request) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException, ServletException {
         Object object = constructObject(objectClass);
-        /* for(Method method: objectClass.getDeclaredMethods()) {
-            // Test if the method is a setter
-            if (method.getName().startsWith("set")) {
-                Class<?>[] parameterTypes = method.getParameterTypes();
-                // Test if the setter has one parameter
-                if (parameterTypes.length == 1) {
-                    // Get the type of the parameter
-                    Class<?> parameterType = parameterTypes[0];
-                    Object attributeValue;
-                    if(parameterType.isArray())
-                        attributeValue = request.getParameterValues(method.getName().substring(3)
-                                .toLowerCase() + "[]");
-                    else
-                        attributeValue = request.getParameter(method.getName().substring(3).toLowerCase());
-                    // Test if attribute value
-                    if(attributeValue == null)
-                        continue;
-                    // Cast the parameter to the right type
-                    Object param = Tools.cast(parameterType, attributeValue);
-                    // Call the setter
-                    method.invoke(object, param);
-                }
-            }
-        }*/
         for(Field field: objectClass.getDeclaredFields()) {
             Class<?> fieldType = field.getType();
             Object attributeValue;
             if(fieldType == File.class) {
+                // If the request is multipart, get the file from the request
                 if(request.getContentType() != null && request.getContentType().startsWith("multipart/"))
                     attributeValue = request.getPart(field.getName());
                 else
@@ -168,13 +148,28 @@ public class FrontServlet extends HttpServlet {
                 attributeValue = request.getParameterValues(field.getName().toLowerCase() + "[]");
             else
                 attributeValue = request.getParameter(field.getName().toLowerCase());
-            if(attributeValue == null)
+            if(attributeValue == null) // If there is not a parameter with the same name as the field
                 continue;
             Object param = Tools.cast(fieldType, attributeValue);
             field.setAccessible(true);
             field.set(object, param);
         }
         return object;
+    }
+
+    // For singleton classes
+    public Object constructObject(Class<?> objectClass) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if(objectClass.isAnnotationPresent(Singleton.class)) { // If the class is annotated with @Singleton
+            if(getInstances().containsKey(objectClass)) { // If the class is already instantiated
+                return getInstances().get(objectClass);
+            } else {
+                Object object = objectClass.getDeclaredConstructor().newInstance();
+                getInstances().put(objectClass, object);
+                return object;
+            }
+        }
+        // If the class is not annotated with @Singleton create a new instance
+        return objectClass.getDeclaredConstructor().newInstance();
     }
 
     // Getters and setters
