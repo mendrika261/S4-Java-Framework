@@ -1,5 +1,7 @@
 package etu2024.framework.servlet;
 
+import etu2024.framework.annotation.Auth;
+import etu2024.framework.annotation.Session;
 import etu2024.framework.annotation.Singleton;
 import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
@@ -79,19 +81,26 @@ public class FrontServlet extends HttpServlet {
 
             ModelView modelView = (ModelView) method.invoke(object, parameters.toArray());
 
-            // Set session attributes from the modelView to the request
-            for (String key: modelView.getSession().keySet()) {
-                // If the value is null, remove the attribute from the session
-                if(modelView.getSession().get(key) == null)
-                    session.removeAttribute(key);
-                else
-                    session.setAttribute(key, modelView.getSession().get(key));
-            }
+            if(method.isAnnotationPresent(Session.class) || objectClass.isAnnotationPresent(Session.class) ||
+                method.isAnnotationPresent(Auth.class)) {
+                // Set session attributes from the modelView to the request
+                for (String key : modelView.getSession().keySet()) {
+                    // If the value is null, remove the attribute from the session
+                    if (modelView.getSession().get(key) == null)
+                        session.removeAttribute(key);
+                    else
+                        session.setAttribute(key, modelView.getSession().get(key));
+                }
 
-            // Set session from the request to the modelView
-            for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements(); ) {
-                String key = e.nextElement();
-                modelView.addSessionItem(key, session.getAttribute(key));
+                // Set session from the request to the modelView
+                for (Enumeration<String> e = session.getAttributeNames(); e.hasMoreElements(); ) {
+                    String key = e.nextElement();
+                    modelView.addSessionItem(key, session.getAttribute(key));
+                }
+            } else {
+                if(!modelView.getSession().isEmpty())
+                    throw new RuntimeException("FRAMEWORK ERROR - You can't set or get session attributes if the method" +
+                            " or the class is not annotated with @Session");
             }
 
             // Set the attributes from the modelView to the request
