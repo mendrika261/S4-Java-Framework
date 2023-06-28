@@ -21,6 +21,7 @@ DONE
 8. [x] `framework.sh` manager and auto-reload
 
 **TODO**
+
 10. [ ] Database integration
 11. [ ] Error reporting (404 error page...)
 12. [ ] Log system
