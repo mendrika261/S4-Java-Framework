@@ -1,13 +1,14 @@
 import etu2024.framework.annotation.Auth;
+import etu2024.framework.annotation.RestAPI;
+import etu2024.framework.annotation.Session;
 import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
 import etu2024.framework.annotation.Url;
 
 import java.sql.Date;
-import java.util.Arrays;
 
 public class Emp {
-    String[] name;
+    String name;
     Date creation;
     File file;
 
@@ -37,12 +38,14 @@ public class Emp {
         return modelView;
     }
 
+    @RestAPI
+    @Session
     @Url(url = "/find")
-    public ModelView get(Double id) {
-        ModelView modelView = new ModelView("test.jsp");
-        modelView.setJson(true);
-        modelView.addItem("name", "test");
-        return modelView;
+    public Emp get(Double id) {
+        Emp emp = new Emp();
+        emp.setCreation(new Date(0));
+        emp.name = "";
+        return emp;
     }
 
     public Date getCreation() {
