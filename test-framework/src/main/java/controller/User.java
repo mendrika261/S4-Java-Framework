@@ -5,9 +5,12 @@ import etu2024.framework.annotation.Url;
 import etu2024.framework.core.ModelView;
 import etu2024.framework.utility.Conf; // Conf class to interact with the configuration file app.xml
 
+import java.util.HashMap;
+
 public class User {
     String password;
     String username;
+    HashMap<String, Object> sessions;
 
     @Url(url = "/login") // Annotation to declare the controller and set the url
     @Session // This annotation is required to use session in the controller

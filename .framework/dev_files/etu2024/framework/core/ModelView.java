@@ -3,7 +3,9 @@ package etu2024.framework.core;
 import etu2024.framework.utility.Conf;
 import etu2024.framework.utility.User;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 
 // This class is used to store the view and the data to be sent to the view
@@ -13,6 +15,8 @@ public class ModelView {
     HashMap<String, Object> session = new HashMap<>();
     boolean isJson = false;
     boolean isRedirect = false;
+    boolean invalidateSession = false; // Remove all session items if true
+    List<String> removeSessions = new ArrayList<>(); // Remove specific session items
 
     // Constructor
     public ModelView() {}
@@ -105,7 +109,7 @@ public class ModelView {
     }
 
     public void removeSessionItem(String key) {
-        getSession().put(key, null);
+        getRemoveSessions().add(key);
     }
 
     public boolean isJson() {
@@ -122,5 +126,21 @@ public class ModelView {
 
     public void setRedirect(boolean isRedirect) {
         this.isRedirect = isRedirect;
+    }
+
+    public List<String> getRemoveSessions() {
+        return removeSessions;
+    }
+
+    public void setRemoveSessions(List<String> removeSessions) {
+        this.removeSessions = removeSessions;
+    }
+
+    public boolean isInvalidateSession() {
+        return invalidateSession;
+    }
+
+    public void setInvalidateSession(boolean invalidateSession) {
+        this.invalidateSession = invalidateSession;
     }
 }
