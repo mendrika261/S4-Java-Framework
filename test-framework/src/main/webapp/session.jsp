@@ -11,8 +11,11 @@
     <h1>Session</h1>
     <a href="${pageContext.request.contextPath}/">Return home</a>
     <p>Set session here, and it will appear even if after changed the page</p>
-    <p>Session: <%= session.getAttribute("session") %>
+    <p>Session: <%= session.getAttribute("session") %>(From session), <%= request.getAttribute("session") %>(From attribute in class)
         <a href="${pageContext.request.contextPath}/session?remove">Remove this session</a>
+    </p>
+    <p>Remove all session:
+        <a href="${pageContext.request.contextPath}/session?invalidate">Invalidate</a>
     </p>
     <form action="${pageContext.request.contextPath}/session" method="POST">
         <input type="text" name="session" id="session" placeholder="Your name for example">

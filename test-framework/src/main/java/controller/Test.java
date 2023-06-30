@@ -8,10 +8,15 @@ import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
 
 import java.util.Arrays;
+import java.util.HashMap;
 
 @Session // The session annotation can be applied to the class or to the method
 public class Test {
     String someAttribute = "This is a JSON Response from class converted to JSON";
+
+    // The session attribute is automatically get from the request
+    // Don't forget to put it if you want to get sessions
+    HashMap<String, Object> sessions = new HashMap<>();
 
     @Url(url = "/") // Don't forget to put / at the beginning of each url
     @Auth // The @auth annotation is used to check if the user is logged in
@@ -24,14 +29,20 @@ public class Test {
 
     @Url(url = "/session")
     @Auth(profiles = {"admin", "user"}) // The @auth annotation can take a list of profiles as arguments
-    public ModelView session(String session, String remove) {
+    public ModelView session(String session, String remove, String invalidate) {
         ModelView modelView = new ModelView();
 
-        if (session != null)
+        if (session != null) // Add a session
             modelView.addSessionItem("session", session);
 
-        if (remove != null)
+        if (remove != null) // Remove one session
             modelView.removeSessionItem("session");
+
+        if (invalidate != null) // Remove all session
+            modelView.setInvalidateSession(true);
+
+        // Get session attributes in the session HashMap
+        modelView.addItem("session", sessions.get("session"));
 
         modelView.setView("session.jsp");
         return modelView;
