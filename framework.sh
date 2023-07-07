@@ -172,8 +172,8 @@ if [[ "$1" == "-b" || "$1" == "--build" ]]; then
     # Copy web.xml to $temp_dir/WEB-INF
     cp "$PROJECT_WEB_XML" "$temp_dir/WEB-INF"
 
-    # Copy framework.jar to $temp_dir/WEB-INF/lib
-    cp "$PROJECT_JAVA_LIB/framework.jar" "$temp_dir/WEB-INF/lib"
+    # Copy all lib .jar to $temp_dir/WEB-INF/lib
+    cp -R "$PROJECT_JAVA_LIB"/* "$temp_dir/WEB-INF/lib"
 
     # Compile java files
     echo -e "${COLOR_BLUE}Compiling java files...${COLOR_RESET}"
