@@ -1,7 +1,11 @@
 <div align="center">
 
-# Weby Framework ☕️
+<h3> Weby Framework ☕️ </h3>
+
 A simple Java Framework for Web Applications 👨‍💻
+
+<img src="https://badgen.net/badge/Status/Dev/red?icon=github" alt="Dev">
+<img src="https://badgen.net/github/releases/micromatch/micromatch?icon=github" alt="Dev">
 
 </div>
 
@@ -17,6 +21,7 @@ DONE
 8. [x] `framework.sh` manager and auto-reload
 
 **TODO**
+
 10. [ ] Database integration
 11. [ ] Error reporting (404 error page...)
 12. [ ] Log system
@@ -30,15 +35,16 @@ DONE
 | JDK ☕️          | equal or upper 17 |
 | Tomcat 🐱       | equal or upper 10 |
 | Gson library 📚 | 2.10 (provided ✅) |
+| OS 💻           | can run bash script     |
 
 ## Installation 🚀
-Get the last released version from the [releases page]() 
+Get the last released version from the [releases page](https://github.com/mendrika261/S4-Java-Framework/releases/tag/v0.1) 
 - Demo version contains examples of use and some test
 - Production version contains only the framework
 
 ### First configuration
 - Open `conf.env` file and set all: jdk, tomcat, information about your project like where the project will be created<br>
-If it is not in your file get it from [here]() and change
+If it is not in your file get it from [here](https://github.com/mendrika261/S4-Java-Framework/blob/v0.1/conf.env) and change
 - Then, give permissions for `framework.sh` the script that will help you to manage the framework
 ```bash
 sudo chmod +x framework.sh
@@ -110,5 +116,5 @@ return modelView.redirect("/home");
 ```
 
 #### See full documentation [here]() 📖
-Report bugs [here]() 🐛 and contribute [here]() 🤝
+Report bugs [here](https://github.com/mendrika261/S4-Java-Framework/issues) 🐛 and contribute [here](https://github.com/mendrika261/S4-Java-Framework/pulls) 🤝
 
