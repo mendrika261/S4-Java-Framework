@@ -1,7 +1,6 @@
 package etu2024.framework.servlet;
 
 import com.google.gson.Gson;
-import etu2024.framework.annotation.Auth;
 import etu2024.framework.annotation.RestAPI;
 import etu2024.framework.annotation.Session;
 import etu2024.framework.annotation.Singleton;
@@ -14,14 +13,12 @@ import etu2024.framework.utility.Tools;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.*;
-import org.eclipse.jdt.internal.compiler.codegen.ObjectCache;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.net.http.HttpRequest;
 import java.util.*;
 
 @MultipartConfig
@@ -35,6 +32,7 @@ public class FrontServlet extends HttpServlet {
         // Get the mapping urls from the package root set in the web.xml
         setMappingUrls(Mapping.getAnnotatedUrlMethod(getInitParameter("PACKAGE_ROOT")));
         setInstances(new HashMap<>());
+        Conf.CONFIG_FILE = getInitParameter("CONFIG_FILE");
     }
 
     @Override
@@ -52,6 +50,11 @@ public class FrontServlet extends HttpServlet {
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         // Get the url from the request
         String request_url = request.getRequestURL().toString().split(request.getContextPath())[1];
+
+        if(request_url.contains(".")) {
+            // send to default servlet
+            getServletContext().getNamedDispatcher("default").forward(request, response);
+        }
 
         // Get the mapping from the url
         Mapping mapping = getMappingUrls().get(request_url);
@@ -112,7 +115,7 @@ public class FrontServlet extends HttpServlet {
             // Check if client authorized to call the method (if the method is annotated with @Auth)
             Object profile = session.getAttribute(Conf.getAuthSessionName());
             if(!User.isAuthorized(method, profile)) {
-                response.sendRedirect(getServletContext().getContextPath()+Conf.getAuthRedirections().get("AUTH_REDIRECT_LOGOUT"));
+                response.sendRedirect(request.getContextPath()+Conf.getAuthRedirections().get("AUTH_REDIRECT_LOGOUT"));
                 return;
             }
 
@@ -128,9 +131,9 @@ public class FrontServlet extends HttpServlet {
 
             // Forward the request if view is set in the modelView
             if (modelView.getView() != null) {
-                if (modelView.isRedirect())
-                    response.sendRedirect(getServletContext().getContextPath()+modelView.getView());
-                else
+                if (modelView.isRedirect()) {
+                    response.sendRedirect(request.getContextPath() + modelView.getView());
+                } else
                     request.getRequestDispatcher(modelView.getView()).forward(request, response);
             }
 

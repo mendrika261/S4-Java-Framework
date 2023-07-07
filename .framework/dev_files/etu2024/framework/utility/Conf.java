@@ -19,7 +19,7 @@ public class Conf {
             DocumentBuilder builder = factory.newDocumentBuilder();
             return builder.parse(CONFIG_FILE);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error while parsing app.xml config, verify path or syntax");
         }
     }
 
