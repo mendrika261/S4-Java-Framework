@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 
-<!--
-    The app.xml file is used to configure the application.
-    It is loaded by the framework and can be accessed via the Conf class.
--->
-
 <app>
     <config id="auth">
         <session name="profile" />
@@ -12,5 +7,9 @@
             <profile name="AUTH_PROFILE_ADMIN" value="admin" />
             <profile name="AUTH_PROFILE_USER" value="user" />
         </profiles>
+        <redirections>
+            <redirect name="AUTH_REDIRECT_LOGIN" value="/" />
+            <redirect name="AUTH_REDIRECT_LOGOUT" value="/login" />
+        </redirections>
     </config>
 </app>

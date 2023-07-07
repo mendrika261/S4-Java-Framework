@@ -36,7 +36,12 @@ if [[ "$1" == "-i" || "$1" == "--init" ]]; then
 
     # Create web.xml jakarta from ./.framework/web.xml and evaluate variables in the file
     export PROJECT_JAVA_SRC
+    export PROJECT_CONFIG_FILE
     envsubst < .framework/web.xml > "$PROJECT_WEB_XML"
+    envsubst < .framework/web.xml > "$PROJECT_CONFIG_FILE"
+
+    # copy app.xml
+    cp .framework/app.xml "$PROJECT_CONFIG_FILE"
 
     # Move framework.jar to $PROJECT_JAVA_LIB
     cp .framework/framework.jar "$PROJECT_JAVA_LIB"
@@ -249,7 +254,8 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
 
     # Run tomcat with hot reload feature
     echo -e "${COLOR_BLUE}Running tomcat server... please wait!${COLOR_RESET}"
-    "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
+    # "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
+    "$TOMCAT_BIN"/catalina.sh run
 
     # Check if tomcat is running on port $TOMCAT_PORT
     response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:"${TOMCAT_PORT}")
@@ -282,6 +288,7 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
 
         # If any files have been modified
         if [ ${#changes} -ne 0 ]; then
+            "$TOMCAT_BIN"/catalina.sh stop >> 'tomcat.log' 2>&1
             # Clear the output
             clear
             echo -ne "\033c"
