@@ -254,8 +254,8 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
 
     # Run tomcat with hot reload feature
     echo -e "${COLOR_BLUE}Running tomcat server... please wait!${COLOR_RESET}"
-    # "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
-    "$TOMCAT_BIN"/catalina.sh run
+    "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
+    # "$TOMCAT_BIN"/catalina.sh run
 
     # Check if tomcat is running on port $TOMCAT_PORT
     response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:"${TOMCAT_PORT}")
