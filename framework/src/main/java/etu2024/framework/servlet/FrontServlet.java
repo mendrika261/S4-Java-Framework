@@ -54,6 +54,7 @@ public class FrontServlet extends HttpServlet {
         if(request_url.contains(".")) {
             // send to default servlet
             getServletContext().getNamedDispatcher("default").forward(request, response);
+            return;
         }
 
         // Get the mapping from the url

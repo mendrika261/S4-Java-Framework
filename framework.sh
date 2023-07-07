@@ -172,8 +172,8 @@ if [[ "$1" == "-b" || "$1" == "--build" ]]; then
     # Copy web.xml to $temp_dir/WEB-INF
     cp "$PROJECT_WEB_XML" "$temp_dir/WEB-INF"
 
-    # Copy framework.jar to $temp_dir/WEB-INF/lib
-    cp "$PROJECT_JAVA_LIB/framework.jar" "$temp_dir/WEB-INF/lib"
+    # Copy all lib .jar to $temp_dir/WEB-INF/lib
+    cp -R "$PROJECT_JAVA_LIB"/* "$temp_dir/WEB-INF/lib"
 
     # Compile java files
     echo -e "${COLOR_BLUE}Compiling java files...${COLOR_RESET}"
@@ -254,8 +254,8 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
 
     # Run tomcat with hot reload feature
     echo -e "${COLOR_BLUE}Running tomcat server... please wait!${COLOR_RESET}"
-    # "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
-    "$TOMCAT_BIN"/catalina.sh run
+    "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
+    # "$TOMCAT_BIN"/catalina.sh run
 
     # Check if tomcat is running on port $TOMCAT_PORT
     response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:"${TOMCAT_PORT}")

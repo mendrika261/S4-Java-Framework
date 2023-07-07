@@ -64,7 +64,7 @@ sudo chmod +x framework.sh
 for `*.xml` or any configurations changed you might sometimes need to restart tomcat ⚠️
 
 ### Manual installation
-After downloading the jar file, you can add it to your lib project and use it as a dependency.
+After downloading the jar file, you can add it to your lib project and use it as a dependency (make Gson in your dependency too).
 #### Configure app.xml
 Create a file `app.xml` in your project and copy the basic configuration below.
 ```xml
