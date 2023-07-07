@@ -23,7 +23,7 @@ DONE
 **TODO**
 
 10. [ ] Database integration
-11. [ ] Error reporting (404 error page...)
+11. [ ] Error page (404, 500...)
 12. [ ] Log system
 13. [ ] Security improvements
 14. [ ] Full Documentation <br>
@@ -38,11 +38,12 @@ DONE
 | OS 💻           | can run bash script     |
 
 ## Installation 🚀
-Get the last released version from the [releases page](https://github.com/mendrika261/S4-Java-Framework/releases/tag/v0.1) 
-- Demo version contains examples of use and some test
-- Production version contains only the framework
+There is 3 versions, get the last released from the [releases page](https://github.com/mendrika261/S4-Java-Framework/releases/tag/v0.1)
+- Production version: contains the framework with `framework.sh` manager
+- Manual version: contains only `framework.jar`. See manual installation [below](#manual-installation)
+- Demo version: production version with a demo project
 
-### First configuration
+### First configuration (production version)
 - Open `conf.env` file and set all: jdk, tomcat, information about your project like where the project will be created<br>
 If it is not in your file get it from [here](https://github.com/mendrika261/S4-Java-Framework/blob/v0.1/conf.env) and change
 - Then, give permissions for `framework.sh` the script that will help you to manage the framework
@@ -61,6 +62,55 @@ sudo chmod +x framework.sh
 ```
 > The script will compile your project and run it in tomcat with `auto reload` feature enabled,
 for `*.xml` or any configurations changed you might sometimes need to restart tomcat ⚠️
+
+### Manual installation
+After downloading the jar file, you can add it to your lib project and use it as a dependency.
+#### Configure app.xml
+Create a file `app.xml` in your project and copy the basic configuration below.
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+
+<app>
+    <config id="auth">
+        <session name="profile" />
+        <profiles>
+            <profile name="AUTH_PROFILE_ADMIN" value="admin" />
+            <profile name="AUTH_PROFILE_USER" value="user" />
+        </profiles>
+        <redirections>
+            <redirect name="AUTH_REDIRECT_LOGIN" value="/" />
+            <redirect name="AUTH_REDIRECT_LOGOUT" value="/login" />
+        </redirections>
+    </config>
+</app>
+```
+#### Configure web.xml by adding the servlet to handle all requests
+> You must set PACKAGE_ROOT and CONFIG_FILE parameters
+```xml
+...
+<!-- This is the main servlet of the framework -->
+<servlet>
+    <servlet-name>FrontServlet</servlet-name>
+    <servlet-class>etu2024.framework.servlet.FrontServlet</servlet-class>
+    <init-param>
+        <!-- The root package of your project -->
+        <param-name>PACKAGE_ROOT</param-name>
+        <param-value>.../popo/src/main/java/</param-value>
+    </init-param>
+    <init-param>
+        <!-- The path to the configuration file -->
+        <param-name>CONFIG_FILE</param-name>
+        <param-value>.../popo/src/app.xml</param-value>
+    </init-param>
+</servlet>
+        
+<!-- All the requests are processed by FrontServlet -->
+<servlet-mapping>
+    <servlet-name>FrontServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+</servlet-mapping>
+...
+```
 
 ## Usage 🧑‍🍳
 > Let's learn by examples, it is the best (and fastest) way to learn. ℹ️
