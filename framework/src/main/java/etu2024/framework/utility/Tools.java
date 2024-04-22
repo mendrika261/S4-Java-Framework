@@ -9,6 +9,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 // This class contains useful methods
@@ -63,9 +65,19 @@ public class Tools {
                     Method method = type.getMethod("valueOf", String.class);
                     return method.invoke(null, String.valueOf(value));
                 } catch (NoSuchMethodException ex) {
-                    // If the constructor and the valueOf method are not found, throw an exception
-                    throw new MethodNotFoundException("FRAMEWORK ERROR - The type " + type.getName() +
-                            " doesn't have a constructor or a valueOf method with a String parameter");
+                    if(String.valueOf(value).trim().isEmpty())
+                        return null;
+                    try {
+                        // Try to get the parse method with a String parameter (mostly for LocalDate, LocalDateTime, ...)
+                        Method method = type.getMethod("parse", CharSequence.class);
+                        return method.invoke(null, String.valueOf(value));
+                    } catch (InvocationTargetException | IllegalAccessException exception) {
+                        return null;
+                    } catch (NoSuchMethodException exception) {
+                        // If the type is not supported, throw an exception
+                        throw new MethodNotFoundException("FRAMEWORK ERROR - The framework does not support " + type.getName() +
+                                " yet!");
+                    }
                 } catch (InvocationTargetException | IllegalAccessException ignored) {
                     return null;
                 }

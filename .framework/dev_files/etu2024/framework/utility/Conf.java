@@ -28,6 +28,7 @@ public class Conf {
             Element sessionElement = (Element) getDocument().getElementsByTagName("session").item(0);
             return sessionElement.getAttribute("name");
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Session name for auth not found in app.xml");
         }
     }
