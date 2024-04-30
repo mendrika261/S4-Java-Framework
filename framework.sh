@@ -133,7 +133,7 @@ function compile {
   while [ ${#source_files[@]} -ne 0 ]; do # while there are files to compile (boucle because of other class dependencies)
     for i in "${!source_files[@]}"; do
       # echo -cp "$classpath":"$out_directory" -d "$out_directory" "${source_files[i]}"
-      javac -parameters -cp "$classpath":"$out_directory" -d "$out_directory" "${source_files[i]}" 2>compilation.log
+      javac -parameters -cp "$classpath:$out_directory" -d "$out_directory" "${source_files[i]}" 2>compilation.log
       compilation=$(<compilation.log) # ignore error dependency
       if [ ${#compilation[0]} -eq 0  ]; then # remove compiled files
         unset "source_files[$i]"
@@ -161,10 +161,11 @@ if [[ "$1" == "-b" || "$1" == "--build" ]]; then
 
     # Make a temp dir in $PROJECT_OUTPUT
     rm -rf "$PROJECT_OUTPUT/project"
-    temp_dir=$(mktemp -d "$PROJECT_OUTPUT/project")
+    temp_dir="$PROJECT_OUTPUT/project"
     echo -e "${COLOR_BLUE}Building project in $temp_dir...${COLOR_RESET}"
 
     # Create .war structure
+    mkdir -p "$PROJECT_OUTPUT/project"
     mkdir -p "$temp_dir/WEB-INF/classes"
     mkdir -p "$temp_dir/WEB-INF/lib"
     mkdir -p "$temp_dir/META-INF"
@@ -178,7 +179,7 @@ if [[ "$1" == "-b" || "$1" == "--build" ]]; then
     # Compile java files
     echo -e "${COLOR_BLUE}Compiling java files...${COLOR_RESET}"
 
-    compilation=$(compile "$PROJECT_JAVA_SRC" "$temp_dir/WEB-INF/classes" "$PROJECT_JAVA_LIB/framework.jar:$TOMCAT_LIB/*")
+    compilation=$(compile "$PROJECT_JAVA_SRC" "$temp_dir/WEB-INF/classes" "$PROJECT_JAVA_LIB/*:$TOMCAT_LIB/*")
     if [ ${#compilation[0]} -ne 0 ]; then
         echo "$compilation"
         exit 1
@@ -254,6 +255,7 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
 
     # Run tomcat with hot reload feature
     echo -e "${COLOR_BLUE}Running tomcat server... please wait!${COLOR_RESET}"
+    export CATALINA_OPTS="-Dcatalina.http.port=${TOMCAT_PORT}"
     "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
     # "$TOMCAT_BIN"/catalina.sh run
 
@@ -287,22 +289,22 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
         changes=$(find "$PWD" -type f -newer .framework/timestamp)
 
         # If any files have been modified
-        if [ ${#changes} -ne 0 ]; then
-            "$TOMCAT_BIN"/catalina.sh stop >> 'tomcat.log' 2>&1
+    #    if [ ${#changes} -ne 0 ]; then
+    #        "$TOMCAT_BIN"/catalina.sh stop >> 'tomcat.log' 2>&1
             # Clear the output
-            clear
-            echo -ne "\033c"
-            echo -e "\n****************************\n${COLOR_BLUE}Reloading web application...${COLOR_RESET}\n\n"
+    #        clear
+    #        echo -ne "\033c"
+    #        echo -e "\n****************************\n${COLOR_BLUE}Reloading web application...${COLOR_RESET}\n\n"
 
 
-            touch .framework/timestamp
-            "$0" -r --re-run
-            if [ $? -ne 0 ]; then
-                exit 1
-            fi
-        fi
+    #        touch .framework/timestamp
+    #       "$0" -r --re-run
+    #        if [ $? -ne 0 ]; then
+    #            exit 1
+    #        fi
+    #    fi
         # Sleep for 1 second before checking for changes again
-        sleep 1
+    #    sleep 1
     done
 
     exit 0

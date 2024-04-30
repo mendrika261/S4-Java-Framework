@@ -15,12 +15,18 @@
     </p>
     <p>
         Files: <%= request.getAttribute("file") %> <br>
-        Tags: <%= request.getAttribute("tag") %>
+        Tags: <%= request.getAttribute("tag") %> <br>
+        Local datetime: <%= request.getAttribute("localDateTime") %>
+        Local date: <%= request.getAttribute("localDate") %>
+        Local time: <%= request.getAttribute("localTime") %>
     </p>
     <form action="${pageContext.request.contextPath}/file" method="post" enctype="multipart/form-data">
         <input type="file" name="file" placeholder="File to upload">
         <input type="text" name="tag[]" placeholder="Tag">
         <input type="text" name="tag[]" placeholder="Another tag">
+        <input type="datetime-local" name="localDateTime">
+        <input type="date" name="localDate">
+        <input type="time" name="localTime">
         <input type="submit">
     </form>
 </body>

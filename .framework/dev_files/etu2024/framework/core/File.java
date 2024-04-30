@@ -1,9 +1,9 @@
 package etu2024.framework.core;
 
-import etu2024.framework.annotation.Auth;
 import jakarta.servlet.http.Part;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -22,6 +22,19 @@ public class File {
 
     public File(Part filePart) throws IOException {
         setContent(File.partToByte(filePart));
+        setName(getFileNameWithExtension(filePart));
+    }
+
+    public String getFileNameWithExtension(Part part) {
+        String contentDispositionHeader = part.getHeader("content-disposition");
+        String[] elements = contentDispositionHeader.split(";");
+        for (String element : elements) {
+            if (element.trim().startsWith("filename")) {
+                String fileName = element.substring(element.indexOf('=') + 1).trim().replace("\"", "");
+                return new java.io.File(fileName).getName();
+            }
+        }
+        return null;
     }
 
     // To check if the file is ready to be used (if it has been uploaded)
@@ -50,6 +63,19 @@ public class File {
         inputStream.close();
 
         return bytes;
+    }
+
+    public void uploadToFile(String filePath) throws IOException {
+        java.io.File file = new java.io.File(filePath+getName());
+
+        // Create the file if it doesn't exist
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(getContent());
+        }
     }
 
     // Getters and setters

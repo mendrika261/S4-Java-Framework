@@ -1,29 +1,32 @@
 package etu2024.framework.servlet;
 
 import com.google.gson.Gson;
-import etu2024.framework.annotation.RestAPI;
-import etu2024.framework.annotation.Session;
-import etu2024.framework.annotation.Singleton;
+import com.google.gson.GsonBuilder;
+import etu2024.framework.annotation.*;
 import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
-import etu2024.framework.utility.Conf;
-import etu2024.framework.utility.User;
-import etu2024.framework.utility.Mapping;
-import etu2024.framework.utility.Tools;
+import etu2024.framework.utility.*;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.lang.Object;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @MultipartConfig
 public class FrontServlet extends HttpServlet {
-    HashMap<String, Mapping> mappingUrls; // The mapping urls
+    HashMap<MappingUrl, Mapping> mappingUrls; // The mapping urls
     HashMap<Class<?>, Object> instances; // The instances of the classes for singleton
 
     @Override
@@ -38,16 +41,29 @@ public class FrontServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Send the request to the processRequest method
-        processRequest(request, response);
+        processRequest(request, response, Mapping.GET);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Send the request to the processRequest method
-        processRequest(request, response);
+        processRequest(request, response, Mapping.POST);
     }
 
-    private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Send the request to the processRequest method
+        processRequest(request, response, Mapping.PUT);
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Send the request to the processRequest method
+        processRequest(request, response, Mapping.DELETE);
+    }
+
+    private void processRequest(HttpServletRequest request, HttpServletResponse response, String requestMethod)
+            throws IOException, ServletException {
         // Get the url from the request
         String request_url = request.getRequestURL().toString().split(request.getContextPath())[1];
 
@@ -58,7 +74,7 @@ public class FrontServlet extends HttpServlet {
         }
 
         // Get the mapping from the url
-        Mapping mapping = getMappingUrls().get(request_url);
+        Mapping mapping = getMappingUrl(request_url, requestMethod);
 
         // If the mapping is null, send a 404 error
         if (mapping == null) {
@@ -76,12 +92,41 @@ public class FrontServlet extends HttpServlet {
 
             // 2. set the parameters corresponding to method parameters
             Method method = Tools.getMethodByName(objectClass, mapping.getMethod());
-            List<Object> parameters = setMethodParameters(method, request);
+            List<Object> parameters = setMethodParameters(method, mapping, request);
 
+            HttpSession session = request.getSession();
+            Object profile = session.getAttribute(Conf.getAuthSessionName());
+
+
+            // Set the session attributes from request to project.controller if the method or the class is annotated with @Session
+            if(method.isAnnotationPresent(Session.class) || objectClass.isAnnotationPresent(Session.class)) {
+                setSessionsFromRequest(object, request, response);
+            }
 
             // @RestAPI function directly return JSON
             if(method.isAnnotationPresent(RestAPI.class)) {
-                printJson(method.invoke(object, parameters.toArray()), response);
+                // Check if client authorized to call the method (if the method is annotated with @Auth)
+                if(!User.isAuthorized(method, profile)) {
+                    printJson("Not allowed to access this page", response);
+                } else {
+                    // Set the session attributes from request to project.controller if the method or the class is annotated with @Session
+                    if(method.isAnnotationPresent(Session.class) || objectClass.isAnnotationPresent(Session.class))
+                        setSessionsFromRequest(object, request, response);
+                    printJson(method.invoke(object, parameters.toArray()), response);
+                }
+                return;
+            }
+
+            if(method.isAnnotationPresent(Xml.class)) {
+                // Check if client authorized to call the method (if the method is annotated with @Auth)
+                if(!User.isAuthorized(method, profile)) {
+                    printXml("Not allowed to access this page", response);
+                } else {
+                    // Set the session attributes from request to project.controller if the method or the class is annotated with @Session
+                    if(method.isAnnotationPresent(Session.class) || objectClass.isAnnotationPresent(Session.class))
+                        setSessionsFromRequest(object, request, response);
+                    printXml(method.invoke(object, parameters.toArray()), response);
+                }
                 return;
             }
 
@@ -99,30 +144,30 @@ public class FrontServlet extends HttpServlet {
 
 
             // Handle session
-            HttpSession session = request.getSession();
 
             // Set the session attributes from modelView to the request
             setSessionsToTheRequest(modelView, session);
 
-            // Set the session attributes from request to controller if the method or the class is annotated with @Session
+            // Set the session attributes from request to project.controller if the method or the class is annotated with @Session
             if(method.isAnnotationPresent(Session.class) || objectClass.isAnnotationPresent(Session.class)) {
                 setSessionsFromRequest(object, request, response);
-            }
-
-            // Re-get the modelView with the new session attributes
-            modelView = (ModelView) method.invoke(object, parameters.toArray());
-
-
-            // Check if client authorized to call the method (if the method is annotated with @Auth)
-            Object profile = session.getAttribute(Conf.getAuthSessionName());
-            if(!User.isAuthorized(method, profile)) {
-                response.sendRedirect(request.getContextPath()+Conf.getAuthRedirections().get("AUTH_REDIRECT_LOGOUT"));
-                return;
             }
 
             // Set the attributes from the modelView to the request
             for (String key : modelView.getData().keySet())
                 request.setAttribute(key, modelView.getData().get(key));
+
+            // Re-get the modelView with the new session attributes
+            //ModelView modelView2 = (ModelView) method.invoke(object, params.toArray());
+
+            // Check if client authorized to call the method (considering change in the method)
+            if(!User.isAuthorized(method, profile)) {
+                if(modelView.isJson())
+                    printJson("Not allowed to access this page", response);
+                else
+                    response.sendRedirect(request.getContextPath()+Conf.getAuthRedirections().get("AUTH_REDIRECT_LOGOUT"));
+                return;
+            }
 
             // Return JSON if isJson is true in the modelView
             if(modelView.isJson()) {
@@ -145,25 +190,53 @@ public class FrontServlet extends HttpServlet {
     }
 
     // Set mapped function parameters from the request
-    public List<Object> setMethodParameters(Method method, HttpServletRequest request) throws ServletException, IOException {
+    public List<Object> setMethodParameters(Method method, Mapping mapping, HttpServletRequest request)
+            throws ServletException, IOException {
         List<Object> parameters = new ArrayList<>();
         for(Parameter parameter : method.getParameters()) {
-            Object paramValue;
-            if(parameter.getType() == File.class) {
-                // If the request is multipart, get the file from the request
-                if(request.getContentType() != null && request.getContentType().startsWith("multipart/"))
-                    paramValue = request.getPart(parameter.getName());
-                else
-                    paramValue = null;
-            } else if(parameter.getType().isArray()) {
-                paramValue = request.getParameterValues(parameter.getName() + "[]");
-            } else {
-                paramValue = request.getParameter(parameter.getName());
+            Object paramValue = null;
+            if(request != null) {
+                if (parameter.isAnnotationPresent(FormObject.class)) {
+                    Class<?> parameterClass = parameter.getType();
+                    try {
+                        parameters.add(setAttributeToTheObject(parameterClass, request));
+                    } catch (Exception ignored) {
+                        parameters.add(null);
+                    }
+                    continue;
+                } else if (parameter.isAnnotationPresent(JsonObject.class)) {
+                    Class<?> parameterClass = parameter.getType();
+                    try {
+                        Gson gson = new Gson();
+                        BufferedReader reader = request.getReader();
+                        parameters.add(gson.fromJson(reader, parameterClass));
+                    } catch (Exception ignored) {
+                        parameters.add(null);
+                    }
+                    continue;
+                } else if (parameter.getType() == File.class) {
+                    // If the request is multipart, get the file from the request
+                    if (request.getContentType() != null && request.getContentType().startsWith("multipart/"))
+                        paramValue = request.getPart(parameter.getName());
+                    else
+                        paramValue = null;
+                } else if (parameter.getType().isArray()) {
+                    paramValue = request.getParameterValues(parameter.getName() + "[]");
+                } else {
+                    if(mapping.getParams().containsKey(parameter.getName()))
+                        paramValue = mapping.getParams().get(parameter.getName());
+                    else
+                        paramValue = request.getParameter(parameter.getName());
+                }
             }
             if(paramValue == null) // If the parameter is not found in the request, add null
                 parameters.add(null);
             else
                 parameters.add(Tools.cast(parameter.getType(), paramValue));
+        }
+        System.out.println("PARAMETERS");
+        for (int i = 0; i < parameters.size(); i++) {
+            System.out.println(parameters.get(i));
         }
         return parameters;
     }
@@ -181,9 +254,9 @@ public class FrontServlet extends HttpServlet {
                 else
                     attributeValue = null;
             } else if(fieldType.isArray())
-                attributeValue = request.getParameterValues(field.getName().toLowerCase() + "[]");
+                attributeValue = request.getParameterValues(field.getName() + "[]");
             else
-                attributeValue = request.getParameter(field.getName().toLowerCase());
+                attributeValue = request.getParameter(field.getName());
             if(attributeValue == null) // If there is not a parameter with the same name as the field
                 continue;
             Object param = Tools.cast(fieldType, attributeValue);
@@ -270,16 +343,69 @@ public class FrontServlet extends HttpServlet {
     public void printJson(Object object, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
+                .registerTypeAdapter(LocalTime.class, new LocalTimeAdapter())
+                .create();
         gson.toJson(object, response.getWriter());
     }
 
+    public String printXml(Object object, HttpServletResponse response) throws IOException {
+        StringBuilder content = new StringBuilder();
+        if(object.getClass().isArray()) {
+            for(Object obj : (Object[]) object) {
+                content.append(printXml(obj, response));
+            }
+        } else {
+            StringBuilder part = new StringBuilder();
+            part.append("<").append(object.getClass().getSimpleName()).append(">\n");
+            for (Field field : object.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                try {
+                    part.append("<").append(field.getName()).append(">");
+                    part.append(field.get(object));
+                    part.append("</").append(field.getName()).append(">");
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+            part.append("</").append(object.getClass().getSimpleName()).append(">\n");
+            return part.toString();
+        }
+
+        response.setContentType("application/xml");
+
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        response.getWriter().println("<xml>");
+        response.getWriter().println(content);
+        response.getWriter().println("</xml>");
+        return content.toString();
+    }
+
+    private Mapping getMappingUrl(String url, String requestMethod) {
+        for (MappingUrl key : getMappingUrls().keySet()) {
+            Pattern pattern = Pattern.compile("^"+key.getUrl().replaceAll("\\{[a-zA-Z0-9]+}", "([a-zA-Z0-9]+)")+"$");
+            Matcher matcher = pattern.matcher(url);
+            if (matcher.find() && key.getMethod().equalsIgnoreCase(requestMethod)) {
+                System.out.println("MATCHED: " + key.getUrl() + " - " + key.getMethod());
+                Mapping mapping = getMappingUrls().get(key);
+                for (int i = 0; i < mapping.getParams().size(); i++) {
+                    mapping.getParams().put(mapping.getParams().keySet().toArray()[i].toString(), matcher.group(i+1));
+                }
+                return mapping;
+            }
+        }
+        return null;
+    }
+
     // Getters and setters
-    public HashMap<String, Mapping> getMappingUrls() {
+    public HashMap<MappingUrl, Mapping> getMappingUrls() {
         return mappingUrls;
     }
 
-    public void setMappingUrls(HashMap<String, Mapping> mappingUrls) {
+    public void setMappingUrls(HashMap<MappingUrl, Mapping> mappingUrls) {
         this.mappingUrls = mappingUrls;
     }
 
