@@ -14,11 +14,26 @@ import java.util.Objects;
 public class Mapping {
     String className;
     String method;
+    HashMap<String, String> params = new HashMap<>();
+
+    public static final String GET = "GET";
+    public static final String POST = "POST";
+    public static final String PUT = "PUT";
+    public static final String DELETE = "DELETE";
 
     // Constructor
     public Mapping(String className, String method) {
         setClassName(className);
         setMethod(method);
+    }
+
+    public void fillParamsKey(String url) {
+        String[] methodParts = url.split("/");
+        for (String methodPart : methodParts) {
+            if (methodPart.startsWith("{") && methodPart.endsWith("}")) {
+                getParams().put(methodPart.substring(1, methodPart.length() - 1), null);
+            }
+        }
     }
 
     // Get all the class names in a package
@@ -46,8 +61,8 @@ public class Mapping {
     }
 
     // Get all the annotated methods with @Url in a package
-    public static HashMap<String, Mapping> getAnnotatedUrlMethod(String path) {
-        HashMap<String, Mapping> mappings = new HashMap<>();
+    public static HashMap<MappingUrl, Mapping> getAnnotatedUrlMethod(String path) {
+        HashMap<MappingUrl, Mapping> mappings = new HashMap<>();
 
         try {
             // Get all the class names in the path
@@ -58,8 +73,11 @@ public class Mapping {
                 for (Method method : methods) {
                     // Get the method annotated with @Url
                     Url url = method.getDeclaredAnnotation(Url.class);
-                    if (url != null)
-                        mappings.put(url.url(), new Mapping(classA.getName(), method.getName()));
+                    if (url != null) {
+                        Mapping mapping = new Mapping(classA.getName(), method.getName());
+                        mapping.fillParamsKey(url.url());
+                        mappings.put(new MappingUrl(url.url(), url.method()), mapping);
+                    }
                 }
             }
         } catch (ClassNotFoundException ignored) {
@@ -83,5 +101,13 @@ public class Mapping {
 
     public void setMethod(String method) {
         this.method = method;
+    }
+
+    public HashMap<String, String> getParams() {
+        return params;
+    }
+
+    public void setParams(HashMap<String, String> params) {
+        this.params = params;
     }
 }

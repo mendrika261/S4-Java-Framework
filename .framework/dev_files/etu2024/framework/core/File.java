@@ -1,6 +1,5 @@
 package etu2024.framework.core;
 
-import etu2024.framework.annotation.Auth;
 import jakarta.servlet.http.Part;
 
 import java.io.ByteArrayOutputStream;

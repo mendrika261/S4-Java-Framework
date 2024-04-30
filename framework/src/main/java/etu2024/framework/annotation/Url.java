@@ -11,5 +11,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Url {
     // Takes a string as a parameter to set the url
-    public String url();
+    String url();
+    String method() default "GET";
 }

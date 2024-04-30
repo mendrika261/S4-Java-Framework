@@ -161,10 +161,11 @@ if [[ "$1" == "-b" || "$1" == "--build" ]]; then
 
     # Make a temp dir in $PROJECT_OUTPUT
     rm -rf "$PROJECT_OUTPUT/project"
-    temp_dir=$(mktemp -d "$PROJECT_OUTPUT/project")
+    temp_dir="$PROJECT_OUTPUT/project"
     echo -e "${COLOR_BLUE}Building project in $temp_dir...${COLOR_RESET}"
 
     # Create .war structure
+    mkdir -p "$PROJECT_OUTPUT/project"
     mkdir -p "$temp_dir/WEB-INF/classes"
     mkdir -p "$temp_dir/WEB-INF/lib"
     mkdir -p "$temp_dir/META-INF"
@@ -254,6 +255,7 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
 
     # Run tomcat with hot reload feature
     echo -e "${COLOR_BLUE}Running tomcat server... please wait!${COLOR_RESET}"
+    export CATALINA_OPTS="-Dcatalina.http.port=${TOMCAT_PORT}"
     "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
     # "$TOMCAT_BIN"/catalina.sh run
 

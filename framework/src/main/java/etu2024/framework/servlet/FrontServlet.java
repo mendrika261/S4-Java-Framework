@@ -2,10 +2,7 @@ package etu2024.framework.servlet;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import etu2024.framework.annotation.RestAPI;
-import etu2024.framework.annotation.Session;
-import etu2024.framework.annotation.Singleton;
-import etu2024.framework.annotation.Xml;
+import etu2024.framework.annotation.*;
 import etu2024.framework.core.File;
 import etu2024.framework.core.ModelView;
 import etu2024.framework.utility.*;
@@ -13,7 +10,9 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.lang.Object;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -22,10 +21,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @MultipartConfig
 public class FrontServlet extends HttpServlet {
-    HashMap<String, Mapping> mappingUrls; // The mapping urls
+    HashMap<MappingUrl, Mapping> mappingUrls; // The mapping urls
     HashMap<Class<?>, Object> instances; // The instances of the classes for singleton
 
     @Override
@@ -40,16 +41,29 @@ public class FrontServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Send the request to the processRequest method
-        processRequest(request, response);
+        processRequest(request, response, Mapping.GET);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Send the request to the processRequest method
-        processRequest(request, response);
+        processRequest(request, response, Mapping.POST);
     }
 
-    private void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Send the request to the processRequest method
+        processRequest(request, response, Mapping.PUT);
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Send the request to the processRequest method
+        processRequest(request, response, Mapping.DELETE);
+    }
+
+    private void processRequest(HttpServletRequest request, HttpServletResponse response, String requestMethod)
+            throws IOException, ServletException {
         // Get the url from the request
         String request_url = request.getRequestURL().toString().split(request.getContextPath())[1];
 
@@ -60,7 +74,7 @@ public class FrontServlet extends HttpServlet {
         }
 
         // Get the mapping from the url
-        Mapping mapping = getMappingUrls().get(request_url);
+        Mapping mapping = getMappingUrl(request_url, requestMethod);
 
         // If the mapping is null, send a 404 error
         if (mapping == null) {
@@ -78,7 +92,7 @@ public class FrontServlet extends HttpServlet {
 
             // 2. set the parameters corresponding to method parameters
             Method method = Tools.getMethodByName(objectClass, mapping.getMethod());
-            List<Object> parameters = setMethodParameters(method, request);
+            List<Object> parameters = setMethodParameters(method, mapping, request);
 
             HttpSession session = request.getSession();
             Object profile = session.getAttribute(Conf.getAuthSessionName());
@@ -176,23 +190,30 @@ public class FrontServlet extends HttpServlet {
     }
 
     // Set mapped function parameters from the request
-    public List<Object> setMethodParameters(Method method, HttpServletRequest request) throws ServletException, IOException {
+    public List<Object> setMethodParameters(Method method, Mapping mapping, HttpServletRequest request)
+            throws ServletException, IOException {
         List<Object> parameters = new ArrayList<>();
         for(Parameter parameter : method.getParameters()) {
             Object paramValue = null;
             if(request != null) {
-                System.out.println("*** eto ***");
-                for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
-                    System.out.println(entry.getKey() + " = " + Arrays.toString(entry.getValue()));
-                }
-                if (parameter.isAnnotationPresent(etu2024.framework.annotation.Object.class)) {
+                if (parameter.isAnnotationPresent(FormObject.class)) {
                     Class<?> parameterClass = parameter.getType();
                     try {
                         parameters.add(setAttributeToTheObject(parameterClass, request));
-                        continue;
-                    } catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
-                             IllegalAccessException ignored) {
+                    } catch (Exception ignored) {
+                        parameters.add(null);
                     }
+                    continue;
+                } else if (parameter.isAnnotationPresent(JsonObject.class)) {
+                    Class<?> parameterClass = parameter.getType();
+                    try {
+                        Gson gson = new Gson();
+                        BufferedReader reader = request.getReader();
+                        parameters.add(gson.fromJson(reader, parameterClass));
+                    } catch (Exception ignored) {
+                        parameters.add(null);
+                    }
+                    continue;
                 } else if (parameter.getType() == File.class) {
                     // If the request is multipart, get the file from the request
                     if (request.getContentType() != null && request.getContentType().startsWith("multipart/"))
@@ -202,13 +223,20 @@ public class FrontServlet extends HttpServlet {
                 } else if (parameter.getType().isArray()) {
                     paramValue = request.getParameterValues(parameter.getName() + "[]");
                 } else {
-                    paramValue = request.getParameter(parameter.getName());
+                    if(mapping.getParams().containsKey(parameter.getName()))
+                        paramValue = mapping.getParams().get(parameter.getName());
+                    else
+                        paramValue = request.getParameter(parameter.getName());
                 }
             }
             if(paramValue == null) // If the parameter is not found in the request, add null
                 parameters.add(null);
             else
                 parameters.add(Tools.cast(parameter.getType(), paramValue));
+        }
+        System.out.println("PARAMETERS");
+        for (int i = 0; i < parameters.size(); i++) {
+            System.out.println(parameters.get(i));
         }
         return parameters;
     }
@@ -345,6 +373,7 @@ public class FrontServlet extends HttpServlet {
             part.append("</").append(object.getClass().getSimpleName()).append(">\n");
             return part.toString();
         }
+
         response.setContentType("application/xml");
 
         response.setCharacterEncoding("UTF-8");
@@ -355,12 +384,28 @@ public class FrontServlet extends HttpServlet {
         return content.toString();
     }
 
+    private Mapping getMappingUrl(String url, String requestMethod) {
+        for (MappingUrl key : getMappingUrls().keySet()) {
+            Pattern pattern = Pattern.compile("^"+key.getUrl().replaceAll("\\{[a-zA-Z0-9]+}", "([a-zA-Z0-9]+)")+"$");
+            Matcher matcher = pattern.matcher(url);
+            if (matcher.find() && key.getMethod().equalsIgnoreCase(requestMethod)) {
+                System.out.println("MATCHED: " + key.getUrl() + " - " + key.getMethod());
+                Mapping mapping = getMappingUrls().get(key);
+                for (int i = 0; i < mapping.getParams().size(); i++) {
+                    mapping.getParams().put(mapping.getParams().keySet().toArray()[i].toString(), matcher.group(i+1));
+                }
+                return mapping;
+            }
+        }
+        return null;
+    }
+
     // Getters and setters
-    public HashMap<String, Mapping> getMappingUrls() {
+    public HashMap<MappingUrl, Mapping> getMappingUrls() {
         return mappingUrls;
     }
 
-    public void setMappingUrls(HashMap<String, Mapping> mappingUrls) {
+    public void setMappingUrls(HashMap<MappingUrl, Mapping> mappingUrls) {
         this.mappingUrls = mappingUrls;
     }
 
