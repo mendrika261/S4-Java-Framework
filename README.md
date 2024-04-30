@@ -10,23 +10,18 @@ A simple Java Framework for Web Applications 👨‍💻
 </div>
 
 ## Features 🐣
-DONE
 1. [x] Singleton class
 2. [x] Session
-3. [x] Auth with many profiles
+3. [x] Authentification/Authorization with many profiles
 4. [x] Return Json (via modelView)
 5. [x] Rest API (direct returning object)
-6. [x] File upload or input array
+6. [x] File upload, input array
 7. [x] `app.xml` external configuration file
-8. [x] `framework.sh` manager and auto-reload
-
-**TODO**
-
-10. [ ] Database integration
-11. [ ] Error page (404, 500...)
-12. [ ] Log system
-13. [ ] Security improvements
-14. [ ] Full Documentation <br>
+8. [x] `framework.sh` manager: build, launch and hot reload
+9. [x] 🎉 Database integration: see 👉 [Unidao here](https://github.com/mendrika261/S5-UniDao)
+10. [ ] Error page (404, 500...)
+11. [ ] Log system
+13. [ ] Full Documentation <br>
     ... and more
 
 ## Requirements 📋
@@ -130,7 +125,18 @@ public ModelView index() {
 }
 ...
 ```
-#### Send data to the view
+#### Example of rest controller using [Unidao](https://github.com/mendrika261/S5-UniDao)
+```java
+@Url(url="/regions", method=Mapping.POST)
+@RestAPI
+public Region save(@JsonObject Region region) throws DaoException {
+    Service service = database.connect();
+	Region region = region.save(service);
+	service.endConnection();
+    return region;
+}
+```
+#### Send data to view
 ```java
 ...
 // The class where all process will be done
@@ -141,7 +147,7 @@ modelView.addItem("name", "Weby");
 modelView.setView("home.jsp");
 ...
 ```
-#### Get data from the view
+#### Get data from view
 Attributes and parameters are filled automatically
 ```java
 public class Customer()
@@ -165,6 +171,4 @@ return modelView.redirect("/home");
 ...
 ```
 
-#### See full documentation [here]() 📖
-Report bugs [here](https://github.com/mendrika261/S4-Java-Framework/issues) 🐛 and contribute [here](https://github.com/mendrika261/S4-Java-Framework/pulls) 🤝
-
+#### See full documentation [Working]() 📖
