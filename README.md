@@ -10,6 +10,7 @@ A simple Java Framework for Web Applications 👨‍💻
 </div>
 
 ## Features 🐣
+
 1. [x] Singleton class
 2. [x] Session
 3. [x] Authentification/Authorization with many profiles
@@ -21,47 +22,61 @@ A simple Java Framework for Web Applications 👨‍💻
 9. [x] 🎉 Database integration: see 👉 [Unidao here](https://github.com/mendrika261/S5-UniDao)
 10. [ ] Error page (404, 500...)
 11. [ ] Log system
-13. [ ] Full Documentation <br>
-    ... and more
+12. [ ] Full Documentation <br>
+        ... and more
 
 ## Requirements 📋
-| Requirements    | Version           |
-|-----------------|-------------------|
-| JDK ☕️          | equal or upper 17 |
-| Tomcat 🐱       | equal or upper 10 |
-| Gson library 📚 | 2.10 (provided ✅) |
-| OS 💻           | can run bash script     |
+
+| Requirements    | Version             |
+| --------------- | ------------------- |
+| JDK ☕️          | equal or upper 17   |
+| Tomcat 🐱       | equal or upper 10   |
+| Gson library 📚 | 2.10 (provided ✅)  |
+| OS 💻           | can run bash script |
 
 ## Installation 🚀
+
 There is 3 versions, get the last released from the [releases page](https://github.com/mendrika261/S4-Java-Framework/releases/tag/v0.1)
+
 - Production version: contains the framework with `framework.sh` manager
 - Manual version: contains only `framework.jar`. See manual installation [below](#manual-installation)
 - Demo version: production version with a demo project
 
 ### First configuration (production version)
+
 - Open `conf.env` file and set all: jdk, tomcat, information about your project like where the project will be created<br>
-If it is not in your file get it from [here](https://github.com/mendrika261/S4-Java-Framework/blob/v0.1/conf.env) and change
+  If it is not in your file get it from [here](https://github.com/mendrika261/S4-Java-Framework/blob/v0.1/conf.env) and change
 - Then, give permissions for `framework.sh` the script that will help you to manage the framework
+
 ```bash
 sudo chmod +x framework.sh
 ```
+
 - Finally, `init` your repository for a weby project
+
 ```bash
 ./framework.sh --init
 ```
 
 ### Running
+
 - To run your project you can use the script `framework.sh`, make `framework.sh --help` to see all options
+
 ```bash
 ./framework.sh --run
 ```
+
 > The script will compile your project and run it in tomcat with `auto reload` feature enabled,
-for `*.xml` or any configurations changed you might sometimes need to restart tomcat ⚠️
+> for `*.xml` or any configurations changed you might sometimes need to restart tomcat ⚠️
 
 ### Manual installation
+
 After downloading the jar file, you can add it to your lib project and use it as a dependency (make Gson in your dependency too).
+
 #### Configure app.xml
+
 Create a file `app.xml` in your project and copy the basic configuration below.
+
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
 
@@ -79,8 +94,11 @@ Create a file `app.xml` in your project and copy the basic configuration below.
     </config>
 </app>
 ```
+
 #### Configure web.xml by adding the servlet to handle all requests
+
 > You must set PACKAGE_ROOT and CONFIG_FILE parameters
+
 ```xml
 ...
 <!-- This is the main servlet of the framework -->
@@ -98,7 +116,7 @@ Create a file `app.xml` in your project and copy the basic configuration below.
         <param-value>.../popo/src/app.xml</param-value>
     </init-param>
 </servlet>
-        
+
 <!-- All the requests are processed by FrontServlet -->
 <servlet-mapping>
     <servlet-name>FrontServlet</servlet-name>
@@ -108,10 +126,13 @@ Create a file `app.xml` in your project and copy the basic configuration below.
 ```
 
 ## Usage 🧑‍🍳
+
 > Let's learn by examples, it is the best (and fastest) way to learn. ℹ️
 
 ### Overview
+
 #### This is a basic controller
+
 ```java
 import etu2024.framework.annotation.Auth;
 import etu2024.framework.core.ModelView;
@@ -125,7 +146,9 @@ public ModelView index() {
 }
 ...
 ```
+
 #### Example of rest controller using [Unidao](https://github.com/mendrika261/S5-UniDao)
+
 ```java
 @Url(url="/regions", method=Mapping.POST)
 @RestAPI
@@ -136,7 +159,9 @@ public Region save(@JsonObject Region region) throws DaoException {
     return region;
 }
 ```
+
 #### Send data to view
+
 ```java
 ...
 // The class where all process will be done
@@ -147,23 +172,28 @@ modelView.addItem("name", "Weby");
 modelView.setView("home.jsp");
 ...
 ```
+
 #### Get data from view
+
 Attributes and parameters are filled automatically
+
 ```java
 public class Customer()
     private String name;
     ...
     public ModelView getCustomer(String id) {
         ModelView modelView = new ModelView();
-        
+
         // Access directly to the variable name and id
-        
+
         modelView.setView("home.jsp");
         return modelView;
     }
     ...
 ```
+
 #### Redirection
+
 ```java
 ...
 ModelView modelView = new ModelView();
