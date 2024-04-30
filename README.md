@@ -19,8 +19,9 @@ A simple Java Framework for Web Applications 👨‍💻
 7. [x] `app.xml` external configuration file
 8. [x] `framework.sh` manager: build, launch and hot reload
 9. [x] 🎉 Database integration: see 👉 [Unidao here](https://github.com/mendrika261/S5-UniDao)
-10. [ ] Error page (404, 500...)
-11. [ ] Log system
+10. [x] 🎉 Mini Scaffolding integration: generate CRUD 👉 [See here](https://github.com/mendrika261/S5-Scaffolding)
+11. [ ] Error page (404, 500...)
+12. [ ] Log system
 13. [ ] Full Documentation <br>
     ... and more
 
