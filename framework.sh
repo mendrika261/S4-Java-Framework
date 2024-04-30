@@ -5,9 +5,9 @@ source conf.env
 
 # Show java framework ascii art
 if [[ "$2" != "--re-run" ]]; then
-  echo -e "${COLOR_BLUE}"
+  echo -e "$COLOR_BLUE"
   cat .framework/ascii_art.txt
-  echo -e "${COLOR_RESET}\n"
+  echo -e "$COLOR_RESET\n"
 fi
 
 # Show help
@@ -89,10 +89,10 @@ if [[ "$1" == "-i" || "$1" == "--init" ]]; then
 
     # Report errors
     if [[ $error -ne 0 ]]; then
-        echo -e "${COLOR_RED}ERROR: Please check your repository permission${COLOR_RESET}\n"
+        echo -e "${COLOR_RED}ERROR: Please check your repository permission$COLOR_RESET\n"
         exit 1
     else
-        echo -e "${COLOR_GREEN}SUCCESS: Project repository initialized successfully${COLOR_RESET}\n"
+        echo -e "${COLOR_GREEN}SUCCESS: Project repository initialized successfully$COLOR_RESET\n"
     fi
     exit 0
 fi
@@ -117,7 +117,7 @@ if [[ "$1" == "--init-dev" ]]; then
     cp -r .framework/lib/* "$DEV_JAVA_LIB"
 
     # Report success
-    echo -e "${COLOR_GREEN}SUCCESS: Project development files initialized successfully ${COLOR_RESET}\n"
+    echo -e "${COLOR_GREEN}SUCCESS: Project development files initialized successfully $COLOR_RESET\n"
 
     exit 0
 fi
@@ -128,7 +128,7 @@ function compile {
   source_directory=$1
   out_directory=$2
   classpath=$3
-  source_files=($(find "$source_directory" -type f -name "*.java")) # get all java files
+  source_files=("$(find "$source_directory" -type f -name "*.java")") # get all java files
   reminding_files=${#source_files[@]}
   while [ ${#source_files[@]} -ne 0 ]; do # while there are files to compile (boucle because of other class dependencies)
     for i in "${!source_files[@]}"; do
@@ -140,7 +140,7 @@ function compile {
       fi
     done
     if [ ${#source_files[@]} -eq "$reminding_files" ]; then # if no file has been compiled
-      echo -e "${COLOR_RED}ERROR: Compilation failed due to unresolved dependencies or mistakes in the code ${COLOR_RESET}"
+      echo -e "${COLOR_RED}ERROR: Compilation failed due to unresolved dependencies or mistakes in the code $COLOR_RESET"
       cat compilation.log
       rm -rf compilation.log
       exit 1
@@ -155,14 +155,14 @@ function compile {
 if [[ "$1" == "-b" || "$1" == "--build" ]]; then
     # Check if project is initialized
     if [[ ! -d "$PROJECT_JAVA_SRC" ]]; then
-        echo -e "${COLOR_RED}ERROR: Project is not initialized${COLOR_RESET}\n"
+        echo -e "${COLOR_RED}ERROR: Project is not initialized$COLOR_RESET\n"
         exit 1
     fi
 
     # Make a temp dir in $PROJECT_OUTPUT
     rm -rf "$PROJECT_OUTPUT/project"
     temp_dir="$PROJECT_OUTPUT/project"
-    echo -e "${COLOR_BLUE}Building project in $temp_dir...${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Building project in $temp_dir...$COLOR_RESET"
 
     # Create .war structure
     mkdir -p "$PROJECT_OUTPUT/project"
@@ -177,7 +177,7 @@ if [[ "$1" == "-b" || "$1" == "--build" ]]; then
     cp -R "$PROJECT_JAVA_LIB"/* "$temp_dir/WEB-INF/lib"
 
     # Compile java files
-    echo -e "${COLOR_BLUE}Compiling java files...${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Compiling java files...$COLOR_RESET"
 
     compilation=$(compile "$PROJECT_JAVA_SRC" "$temp_dir/WEB-INF/classes" "$PROJECT_JAVA_LIB/*:$TOMCAT_LIB/*")
     if [ ${#compilation[0]} -ne 0 ]; then
@@ -186,18 +186,18 @@ if [[ "$1" == "-b" || "$1" == "--build" ]]; then
     fi
 
     # Copy web files
-    echo -e "${COLOR_BLUE}Copying web files...${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Copying web files...$COLOR_RESET"
     cp -r "$PROJECT_WEB_SRC"/* "$temp_dir"
 
     # Create .war file
-    echo -e "${COLOR_BLUE}Creating .war file...${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Creating .war file...$COLOR_RESET"
     jar -cvf "$PROJECT_OUTPUT/$PROJECT_NAME.war" -C "$temp_dir" .
 
     # Remove temp dir
     rm -rf "$temp_dir"
 
     # Report success
-    echo -e "${COLOR_GREEN}SUCCESS: Project built successfully in ${PROJECT_OUTPUT} ${COLOR_RESET}\n"
+    echo -e "${COLOR_GREEN}SUCCESS: Project built successfully in $PROJECT_OUTPUT $COLOR_RESET\n"
     exit 0
 fi
 
@@ -205,17 +205,17 @@ fi
 if [[ "$1" == "--build-dev" ]]; then
     # Check if framework dir is initialized
     if [[ ! -d "$DEV_JAVA_SRC" ]]; then
-        echo -e "${COLOR_RED}ERROR: Framework dev repository is not initialized${COLOR_RESET}\n"
+        echo -e "${COLOR_RED}ERROR: Framework dev repository is not initialized$COLOR_RESET\n"
         exit 1
     fi
 
     # Make a temp dir in $PROJECT_OUTPUT
     rm -rf "$DEV_JAVA_OUTPUT/framework"
     temp_dir=$(mktemp -d "$DEV_JAVA_OUTPUT/framework")
-    echo -e "${COLOR_BLUE}Building framework in $temp_dir...${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Building framework in $temp_dir...$COLOR_RESET"
 
     # Compile java files
-    echo -e "${COLOR_BLUE}Compiling java files...${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Compiling java files...$COLOR_RESET"
     compilation=$(compile "$DEV_JAVA_SRC" "$temp_dir" "$DEV_JAVA_LIB/*:$TOMCAT_LIB/*")
     if [ ${#compilation[0]} -ne 0 ]; then
         echo "$compilation"
@@ -223,7 +223,7 @@ if [[ "$1" == "--build-dev" ]]; then
     fi
 
     # Create .jar file
-    echo -e "${COLOR_BLUE}Creating .jar file...${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Creating .jar file...$COLOR_RESET"
     jar -cvf "$DEV_JAVA_OUTPUT/framework.jar" -C "$temp_dir" .
 
     # Remove temp dir
@@ -237,7 +237,7 @@ if [[ "$1" == "--build-dev" ]]; then
     cp "$DEV_JAVA_OUTPUT/framework.jar" "$PROJECT_JAVA_LIB"
 
     # Report success
-    echo -e "${COLOR_GREEN}SUCCESS: Framework built successfully in ${DEV_JAVA_OUTPUT} ${COLOR_RESET}\n"
+    echo -e "${COLOR_GREEN}SUCCESS: Framework built successfully in $DEV_JAVA_OUTPUT $COLOR_RESET\n"
     exit 0
 fi
 
@@ -250,25 +250,25 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
     fi
 
     # Copy war in webapps
-    echo -e "${COLOR_BLUE}Copying .war file in webapps...${COLOR_RESET}"
+    echo -e "${COLOR_BLUE}Copying .war file in webapps...$COLOR_RESET"
     cp "$PROJECT_OUTPUT/$PROJECT_NAME.war" "$TOMCAT_WEBAPPS"
 
     # Run tomcat with hot reload feature
-    echo -e "${COLOR_BLUE}Running tomcat server... please wait!${COLOR_RESET}"
-    export CATALINA_OPTS="-Dcatalina.http.port=${TOMCAT_PORT}"
+    echo -e "${COLOR_BLUE}Running tomcat server... please wait!$COLOR_RESET"
+    export CATALINA_OPTS="-Dcatalina.http.port=$TOMCAT_PORT"
     "$TOMCAT_BIN"/catalina.sh start >> 'tomcat.log' 2>&1
     # "$TOMCAT_BIN"/catalina.sh run
 
     # Check if tomcat is running on port $TOMCAT_PORT
-    response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:"${TOMCAT_PORT}")
+    response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:"$TOMCAT_PORT")
     # Max delay 10 seconds
     delay=0
     while [ "$response" != "200" ]; do
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:"${TOMCAT_PORT}")
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:"$TOMCAT_PORT")
         sleep 1
         delay=$((delay+1))
         if [ "$delay" -gt 15 ]; then
-            echo -e "${COLOR_RED}ERROR: (timeout 15s) Tomcat server failed to start${COLOR_RESET}\n"
+            echo -e "${COLOR_RED}ERROR: (timeout 15s) Tomcat server failed to start$COLOR_RESET\n"
             echo "Verify your tomcat configuration and if the port $TOMCAT_PORT is not already in use"
             echo "If problem persists, try to run your tomcat server manually"
             echo "You can also check the logs in tomcat.log"
@@ -279,10 +279,10 @@ if [[ "$1" == "-r" || "$1" == "--run" ]]; then
     # tail -f "$TOMCAT_HOME"/logs/catalina.out &
 
     # Report success
-    echo -e "${COLOR_GREEN}Tomcat server is running on port ${TOMCAT_PORT} ${COLOR_RESET}\n"
-    echo -e "Open ${COLOR_BLUE}http://localhost:${TOMCAT_PORT}/${PROJECT_NAME}${COLOR_RESET} in your browser"
+    echo -e "${COLOR_GREEN}Tomcat server is running on port $TOMCAT_PORT $COLOR_RESET\n"
+    echo -e "Open ${COLOR_BLUE}http://localhost:$TOMCAT_PORT/$PROJECT_NAME$COLOR_RESET in your browser"
     echo -e "Changed files will be automatically reloaded (May take a while to see change on browser)\n"
-    echo -e "${COLOR_RED}Press Ctrl+C to stop server...${COLOR_RESET}\n"
+    echo -e "${COLOR_RED}Press Ctrl+C to stop server...$COLOR_RESET\n"
 
     touch .framework/timestamp
     while true; do
@@ -329,8 +329,8 @@ if [[ "$1" == "--run-dev" ]]; then
 fi
 
 # Show error
-echo -e "${COLOR_RED}"
+echo -e "$COLOR_RED"
 echo "Invalid option: $1"
 echo "Try '$0 --help' for more information"
-echo -e "${COLOR_RESET}"
+echo -e "$COLOR_RESET"
 exit 1
